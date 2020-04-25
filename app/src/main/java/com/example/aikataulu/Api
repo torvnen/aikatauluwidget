@@ -1,0 +1,12 @@
+package com.example.aikataulu
+
+import com.example.aikataulu.models.*
+
+class Api {
+    @Suppress("UnnecessaryVariable")
+    fun getStopsContainingText(text: String): ArrayList<Stop> {
+        val stops = ArrayList<Stop>()
+
+        return stops
+    }
+}
