@@ -3,10 +3,15 @@
 package com.example.aikataulu.api
 
 import android.os.AsyncTask
+import android.util.ArrayMap
+import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+import com.apollographql.apollo.request.RequestHeaders
+import com.example.aikataulu.ArrivalsForStopIdQuery
+import com.example.aikataulu.StopByIdQuery
 import com.example.aikataulu.StopByNameQuery
 import com.example.aikataulu.models.Arrival
 import com.example.aikataulu.models.Stop
@@ -50,8 +55,29 @@ object Api {
         return stops
     }
 
-    fun getArrivalsForStop(): ArrayList<Arrival> {
-        val arrivals = ArrayList<Arrival>()
+    fun getArrivalsForStop(stopId: String): ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern> {
+        val arrivals = ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern>()
+        var ready = false
+        val headersMap = HashMap<String, String>()
+        headersMap["Content-Type"] = "application/json"
+        headersMap["Accept"] = "application/json"
+        apolloClient.query(ArrivalsForStopIdQuery(stopId))
+            .requestHeaders(RequestHeaders.builder().addHeaders(headersMap).build())
+            .enqueue(object: ApolloCall.Callback<ArrivalsForStopIdQuery.Data>() {
+            override fun onFailure(e: ApolloException) {
+                System.err.println(e.message.toString())
+
+                ready = true
+            }
+
+            override fun onResponse(response: Response<ArrivalsForStopIdQuery.Data>) {
+                val stoptimesWithoutPattern = response.data?.stop()?.stoptimesWithoutPatterns()
+                if (stoptimesWithoutPattern != null) arrivals.addAll(stoptimesWithoutPattern)
+                ready = true
+            }
+        })
+
+        while (!ready) sleep(10)
 
         return arrivals
     }
