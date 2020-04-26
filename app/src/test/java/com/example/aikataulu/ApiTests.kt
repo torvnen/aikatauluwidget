@@ -6,13 +6,16 @@ import org.junit.Assert.*
 
 class ApiTests {
     @Test
-    fun query_arrivalsForStop_getsResults() {
-        val stopId = "HSL:1140447"
-        Api.getArrivalsForStop()
-    }
-    @Test
     fun query_stopByName_getsResults() {
         val stops = Api.getStopsContainingText("herttoniemi")
         assertTrue(stops.count() > 0)
+    }
+    @Test
+    fun query_arrivalsFor_foundStop_getsResults() {
+        val stops = Api.getStopsContainingText("töölö")
+        assertTrue(stops.count() > 0)
+        val stopId = stops.first().hrtId
+        val arrivals = Api.getArrivalsForStop(stopId)
+        assertTrue(arrivals.count() > 0)
     }
 }
