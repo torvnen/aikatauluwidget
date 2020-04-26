@@ -1,0 +1,1 @@
+../gradlew :app:downloadApolloSchema -Pcom.apollographql.apollo.endpoint=https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql -Pcom.apollographql.apollo.schema=src/main/graphql/com/example/aikataulu/schema.json
