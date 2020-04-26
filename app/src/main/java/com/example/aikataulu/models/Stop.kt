@@ -1,6 +1,6 @@
 package com.example.aikataulu.models
 
-class Stop {
-    var name: String = ""
-    var hrtId: String = "" // Helsinki Regional Transport
+class Stop(name: String, id: String = "") {
+    var name: String = name
+    var hrtId: String = id // Helsinki Regional Transport
 }

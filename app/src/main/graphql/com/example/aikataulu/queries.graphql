@@ -1,0 +1,28 @@
+query StopByIdQuery($id: String!) {
+    stop(id: $id) {
+        gtfsId
+        name
+        lat
+        lon
+        patterns {
+            code
+            directionId
+            headsign
+            route {
+                gtfsId
+                shortName
+                longName
+                mode
+            }
+        }
+    }
+}
+query StopByNameQuery($name: String!) {
+    stops(name: $name) {
+        gtfsId
+        name
+        code
+        lat
+        lon
+    }
+}
