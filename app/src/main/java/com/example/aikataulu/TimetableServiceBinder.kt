@@ -3,9 +3,16 @@ package com.example.aikataulu
 import android.os.IBinder
 import android.os.IInterface
 import android.os.Parcel
+import android.util.Log
 import java.io.FileDescriptor
 
 class TimetableServiceBinder : IBinder {
+    var service: TimetableService? = null
+        set(value) {
+            field = value
+            Log.i("TIMETABLE", "TimetableServiceBinder's service has been set.")
+        }
+
     override fun getInterfaceDescriptor(): String? {
         TODO("Not yet implemented")
     }

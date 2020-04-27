@@ -39,6 +39,7 @@ class WidgetProvider : AppWidgetProvider() {
             if (!isServiceStarted) {
                 // Start Service
                 Log.i("TIMETABLE", "Starting service...")
+                //context.startForegroundService(Intent(context, TimetableService::class.java))
                 context.startService(Intent(context, TimetableService::class.java))
                 isServiceStarted = true
             }
