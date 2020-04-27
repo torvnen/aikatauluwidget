@@ -35,9 +35,9 @@ class WidgetProvider : AppWidgetProvider() {
 
             }
 
-            // Start Service
             Log.d("TIMETABLE", "serviceFullName $TimetableService::class.java")
             if (!isServiceStarted) {
+                // Start Service
                 Log.i("TIMETABLE", "Starting service...")
                 context.startService(Intent(context, TimetableService::class.java))
                 isServiceStarted = true

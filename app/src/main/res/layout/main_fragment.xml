@@ -8,86 +8,86 @@
     android:background="#00897B"
     tools:context=".ui.main.MainFragment">
 
-    <TableLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="340dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="24dp"
         android:background="#009688"
-        android:stretchColumns="1,0"
         android:gravity="center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TableRow
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#009688"
-            android:clipChildren="false"
-            android:paddingVertical="24dp">
+            android:paddingVertical="8dp">
 
             <TextView
                 android:layout_marginStart="8dp"
-                android:id="@+id/label1"
+                android:id="@+id/labelStopName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TableRow1" />
+                android:text="Stop name" />
 
-            <MultiAutoCompleteTextView
-                android:layout_marginEnd="8dp"
-                android:id="@+id/multiAutoCompleteTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="MultiAutoCompleteTextView" />
+            <EditText
+                android:layout_marginHorizontal="8dp"
+                android:id="@+id/stopName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-        </TableRow>
+        </LinearLayout>
 
-        <TableRow
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingVertical="24dp">
+        <Switch
+            android:id="@+id/autoUpdate"
+            android:layout_width="163dp"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="8dp"
+            android:layout_marginStart="8dp"
+            android:text="Auto-update" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <TextView
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
                 android:id="@+id/label2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TableRow2" />
-
-            <AutoCompleteTextView
-                android:layout_marginEnd="8dp"
-                android:id="@+id/autoCompleteTextView"
+                android:text="Auto-update interval" />
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="AutoCompleteTextView" />
+                android:layout_height="wrap_content">
 
-        </TableRow>
+                <EditText
+                    android:id="@+id/updateInterval"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="number" />
 
-        <TableRow
-            android:layout_width="380dp"
-            android:layout_height="match_parent"
+                <TextView
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="8dp"
+                    android:id="@+id/updateIntervalUnit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="seconds" />
+            </LinearLayout>
 
-            android:paddingVertical="24dp">
+        </LinearLayout>
 
-            <CheckedTextView
-                android:layout_margin="8dp"
-                android:id="@+id/checkedTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="54dp"
-                android:layout_span="2"
-                android:background="@drawable/border"
-                android:checkMark="@android:drawable/checkbox_on_background"
-                android:checked="true"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="24dp"
-                android:text="Auto-update"
-                android:textSize="18dp" />
-        </TableRow>
-
-    </TableLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
