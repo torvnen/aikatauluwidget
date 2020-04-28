@@ -6,6 +6,6 @@
     android:previewImage="@mipmap/icon"
     android:initialLayout="@layout/widget"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen">
-
+    android:widgetCategory="home_screen"
+    android:configure="com.example.aikataulu.ui.main.MainActivity">
 </appwidget-provider>

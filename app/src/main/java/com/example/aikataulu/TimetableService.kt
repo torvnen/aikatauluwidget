@@ -2,121 +2,115 @@ package com.example.aikataulu
 
 import android.app.NotificationManager
 import android.app.Service
+import android.appwidget.AppWidgetManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.icu.text.TimeZoneFormat
 import android.os.IBinder
-import android.os.IInterface
-import android.os.Parcel
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
-import java.io.FileDescriptor
+import com.example.aikataulu.models.formatArrivals
+import com.example.aikataulu.ui.main.MainActivity
 import java.util.*
-import kotlin.collections.ArrayList
 
 class TimetableService : Service() {
-    private val binder = TimetableServiceBinder()
+    private var allWidgetIds: IntArray? = null
     private lateinit var _timerTask: TimerTask
     private lateinit var _timer: Timer
 
     companion object {
+        private const val TAG = "TIMETABLE.Service"
+        const val ACTION_SETTINGS_CHANGED = "ACTION_SETTINGS_CHANGED"
         const val creationNotificationId = 12559999
         const val destructionNotificationId = 12559998
-        var isAutoUpdate = false
-        var stopId = ""
-        var interval = 10
     }
 
-    inner class TimetableServiceBinder : IBinder {
-        fun getService(): TimetableService {
-            return this@TimetableService
-        }
-
-        override fun getInterfaceDescriptor(): String? {
-            TODO("Not yet implemented")
-        }
-
-        override fun isBinderAlive(): Boolean {
-            TODO("Not yet implemented")
-        }
-
-        override fun linkToDeath(recipient: IBinder.DeathRecipient, flags: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun queryLocalInterface(descriptor: String): IInterface? {
-            TODO("Not yet implemented")
-        }
-
-        override fun transact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
-            TODO("Not yet implemented")
-        }
-
-        override fun dumpAsync(fd: FileDescriptor, args: Array<out String>?) {
-            TODO("Not yet implemented")
-        }
-
-        override fun dump(fd: FileDescriptor, args: Array<out String>?) {
-            TODO("Not yet implemented")
-        }
-
-        override fun unlinkToDeath(recipient: IBinder.DeathRecipient, flags: Int): Boolean {
-            TODO("Not yet implemented")
-        }
-
-        override fun pingBinder(): Boolean {
-            TODO("Not yet implemented")
-        }
+    private fun ensureTimedTaskCanceled() {
+        if (this::_timerTask.isInitialized)
+            _timerTask.cancel()
     }
 
-    fun setAutoUpdate(b: Boolean) {
-        _timerTask.cancel()
-        if (b) {
-            _timer = Timer()
-            _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * interval).toLong())
-        }
-    }
-    fun setStopId(id: String) {
-        stopId = id
-        setAutoUpdate(isAutoUpdate)
-    }
-
-    override fun onBind(intent: Intent?): TimetableServiceBinder {
-        Log.i("TIMETABLE", "Service.onBind()")
-        return binder
-    }
-
-    override fun onCreate() {
-        Log.i("TIMETABLE", "Service.onCreate()")
-        super.onCreate()
-
-        if (!MainActivity.notificationChannelInitiated) {
-            MainActivity.initiateNotificationChannel(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-        }
-
-        val builder = NotificationCompat.Builder(this, MainActivity.NOTIFICATION_CHANNEL_NAME)
-            .setSmallIcon(R.mipmap.icon)
-            .setContentText("Timetable service started")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-        with(NotificationManagerCompat.from(this)) {
-            // notificationId is a unique int for each notification that you must define
-            //startForeground(creationNotificationId, builder.build())
-        }
-
-        _timerTask = object: TimerTask() {
-            override fun run() {
-                Log.i("TIMETABLE", "Fetching data...")
-                val arrivals = Api.getArrivalsForStop(stopId)
-                Log.i("TIMETABLE", "Received ${arrivals.count()} arrivals")
+    private fun setAutoUpdate(b: Boolean) {
+        ensureTimedTaskCanceled()
+        val stopName = WidgetConfiguration.stopName
+        if (b && stopName != null) {
+            val stops = Api.getStopsContainingText(stopName)
+            if (stops.any()) {
+                val stop = stops.first()
+                _timerTask = object: TimerTask() {
+                    override fun run() {
+                        Log.i(TAG, "Fetching data for stop ${stop.name} (${stop.hrtId})...")
+                        val arrivals = Api.getArrivalsForStop(stop.hrtId)
+                        Log.i(TAG, "Received ${arrivals.count()} arrivals")
+                        setWidgetText(formatArrivals(arrivals))
+                    }
+                }
+                _timer = Timer()
+                _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * WidgetConfiguration.updateIntervalS).toLong())
             }
         }
     }
 
+    fun setWidgetText(text: CharSequence) {
+        val remoteViews = RemoteViews(this.applicationContext.packageName, R.layout.widget)
+        val appWidgetManager = AppWidgetManager.getInstance(this.applicationContext)
+        remoteViews.setTextViewText(R.id.widgetTextView, text)
+        allWidgetIds?.forEach { widgetId -> appWidgetManager.updateAppWidget(widgetId, remoteViews); }
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    override fun onCreate() {
+        Log.i(TAG, "Creating service...")
+        super.onCreate()
+
+        val builder = NotificationCompat
+            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
+            .setSmallIcon(R.mipmap.icon)
+            .setContentTitle("Timetable")
+            .setContentText("Service was created.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+        startForeground(creationNotificationId, builder.build())
+        Log.i(TAG, "Service was created.")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.i(TAG, "Received onStartCommand with intent name ${intent?.action}")
+        // On initial startup (by WidgetProvider), save the widget ids
+        val widgetIds = intent?.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+        if (widgetIds != null) {
+            allWidgetIds = widgetIds
+        }
+
+        // On any start command, start/stop/restart auto-updating.
+        ensureTimedTaskCanceled()
+        setAutoUpdate(WidgetConfiguration.autoUpdate)
+
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun stopService(name: Intent?): Boolean {
+        val builder = NotificationCompat
+            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
+            .setSmallIcon(R.mipmap.icon)
+            .setContentTitle("Timetable")
+            .setContentText("Service was stopped.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        with(NotificationManagerCompat.from(this)) {
+            notify(destructionNotificationId, builder.build())
+        }
+        return super.stopService(name)
+    }
+
     override fun onDestroy() {
-        _timerTask.cancel()
-        Log.i("TIMETABLE", "Service.onDestroy()")
+        if (this::_timerTask.isInitialized) _timerTask.cancel()
+        Log.i(TAG, "onDestroy()")
         super.onDestroy()
     }
 }
