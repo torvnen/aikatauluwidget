@@ -13,7 +13,7 @@ import android.util.Log
 import android.widget.*
 import com.example.aikataulu.R
 import com.example.aikataulu.TimetableService
-import com.example.aikataulu.WidgetConfiguration
+import com.example.aikataulu.TimetableConfiguration
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -52,13 +52,15 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) { }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                WidgetConfiguration.stopName = s.toString()
+                TimetableConfiguration.stopName = s.toString()
             }
         })
         autoUpdate.setOnCheckedChangeListener { _, isChecked ->
-            WidgetConfiguration.autoUpdate = isChecked
+            TimetableConfiguration.autoUpdate = isChecked
         }
         saveButton.setOnClickListener {
+            // Save to disk
+            TimetableConfiguration.saveToFile(applicationContext)
             // Notify Service
             val serviceIntent = Intent(applicationContext, TimetableService::class.java).apply {
                 this.action = TimetableService.ACTION_SETTINGS_CHANGED
@@ -68,20 +70,30 @@ class MainActivity : AppCompatActivity() {
             val widgetId = appWidgetId
             if (widgetId != null) {
                 // Update app widget
+                // TODO check if this works without specifying EXTRA_APPWIDGET_ID to AppWidgetManager
                 RemoteViews(this.packageName,
                     R.layout.widget
                 ).also { views->
                     AppWidgetManager.getInstance(this).updateAppWidget(widgetId.toInt(), views)
                 }
                 val resultValue = Intent().apply {
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
-                        widgetId
-                    )
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 }
                 setResult(Activity.RESULT_OK, resultValue)
                 finish()
             } else Log.d("TIMETABLE", "Cannot finish activity: widgetId is not set.")
         }
+    }
+
+    private fun loadUiState() {
+        TimetableConfiguration.ensureLoaded(applicationContext)
+        val stopName = findViewById<EditText>(R.id.stopName)
+        val autoUpdate = findViewById<Switch>(R.id.autoUpdate)
+        val updateInterval = findViewById<EditText>(R.id.updateInterval)
+
+        autoUpdate.isChecked = TimetableConfiguration.autoUpdate
+        stopName.setText(TimetableConfiguration.stopName)
+        updateInterval.setText(TimetableConfiguration.updateIntervalS.toString())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,6 +111,7 @@ class MainActivity : AppCompatActivity() {
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
         attachEventHandlers()
+        loadUiState()
     }
 
 }

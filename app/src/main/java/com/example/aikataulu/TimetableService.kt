@@ -3,7 +3,7 @@ package com.example.aikataulu
 import android.app.NotificationManager
 import android.app.Service
 import android.appwidget.AppWidgetManager
-import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
@@ -12,12 +12,12 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
+import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.models.formatArrivals
 import com.example.aikataulu.ui.main.MainActivity
 import java.util.*
 
 class TimetableService : Service() {
-    private var allWidgetIds: IntArray? = null
     private lateinit var _timerTask: TimerTask
     private lateinit var _timer: Timer
 
@@ -35,7 +35,8 @@ class TimetableService : Service() {
 
     private fun setAutoUpdate(b: Boolean) {
         ensureTimedTaskCanceled()
-        val stopName = WidgetConfiguration.stopName
+        TimetableConfiguration.ensureLoaded(applicationContext)
+        val stopName = TimetableConfiguration.stopName
         if (b && stopName != null) {
             val stops = Api.getStopsContainingText(stopName)
             if (stops.any()) {
@@ -49,7 +50,7 @@ class TimetableService : Service() {
                     }
                 }
                 _timer = Timer()
-                _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * WidgetConfiguration.updateIntervalS).toLong())
+                _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * TimetableConfiguration.updateIntervalS).toLong())
             }
         }
     }
@@ -58,7 +59,8 @@ class TimetableService : Service() {
         val remoteViews = RemoteViews(this.applicationContext.packageName, R.layout.widget)
         val appWidgetManager = AppWidgetManager.getInstance(this.applicationContext)
         remoteViews.setTextViewText(R.id.widgetTextView, text)
-        allWidgetIds?.forEach { widgetId -> appWidgetManager.updateAppWidget(widgetId, remoteViews); }
+        appWidgetManager.getAppWidgetIds(ComponentName(applicationContext, WidgetProvider::class.java))
+            .forEach { widgetId -> appWidgetManager.updateAppWidget(widgetId, remoteViews) }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -82,15 +84,10 @@ class TimetableService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Received onStartCommand with intent name ${intent?.action}")
-        // On initial startup (by WidgetProvider), save the widget ids
-        val widgetIds = intent?.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
-        if (widgetIds != null) {
-            allWidgetIds = widgetIds
-        }
-
         // On any start command, start/stop/restart auto-updating.
         ensureTimedTaskCanceled()
-        setAutoUpdate(WidgetConfiguration.autoUpdate)
+        TimetableConfiguration.ensureLoaded(applicationContext)
+        setAutoUpdate(TimetableConfiguration.autoUpdate)
 
         return super.onStartCommand(intent, flags, startId)
     }

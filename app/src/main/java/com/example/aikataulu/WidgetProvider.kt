@@ -14,16 +14,15 @@ class WidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // Start Service
+        // Start Service (don't worry about repeating, multiple calls will be handled by the system)
         Log.i(TAG, "Invoking service startup")
-        val intent = Intent(context, TimetableService::class.java)
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
-        context.startForegroundService(intent)
+        context.startForegroundService(Intent(context, TimetableService::class.java))
     }
 
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
         if (context != null) {
             Log.i(TAG, "Stopping service...")
+            Log.i(TAG, "There are ${appWidgetIds?.size} widget ids.")
             context.stopService(Intent(context, TimetableService::class.java))
         } else Log.w(TAG, "Context is null when widget provider is deleted. Cannot stop service.")
         super.onDeleted(context, appWidgetIds)
