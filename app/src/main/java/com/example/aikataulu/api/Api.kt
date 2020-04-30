@@ -10,7 +10,7 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.apollographql.apollo.request.RequestHeaders
-import com.example.aikataulu.ArrivalsForStopIdQuery
+import com.example.aikataulu.DeparturesForStopIdQuery
 import com.example.aikataulu.StopByIdQuery
 import com.example.aikataulu.StopByNameQuery
 import com.example.aikataulu.models.Arrival
@@ -76,18 +76,18 @@ object Api {
         return stops
     }
 
-    fun getArrivalsForStop(stopId: String): ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern> {
-        val arrivals = ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern>()
+    fun getArrivalsForStop(stopId: String): ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern> {
+        val arrivals = ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>()
         var ready = false
-        apolloClient.query(ArrivalsForStopIdQuery(stopId))
-            .enqueue(object: ApolloCall.Callback<ArrivalsForStopIdQuery.Data>() {
+        apolloClient.query(DeparturesForStopIdQuery(stopId))
+            .enqueue(object: ApolloCall.Callback<DeparturesForStopIdQuery.Data>() {
             override fun onFailure(e: ApolloException) {
                 System.err.println(e.message.toString())
 
                 ready = true
             }
 
-            override fun onResponse(response: Response<ArrivalsForStopIdQuery.Data>) {
+            override fun onResponse(response: Response<DeparturesForStopIdQuery.Data>) {
                 val stoptimesWithoutPattern = response.data?.stop()?.stoptimesWithoutPatterns()
                 if (stoptimesWithoutPattern != null) arrivals.addAll(stoptimesWithoutPattern)
                 ready = true

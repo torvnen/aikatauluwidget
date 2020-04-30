@@ -26,23 +26,25 @@ query StopByNameQuery($name: String!) {
         lon
     }
 }
-query ArrivalsForStopIdQuery($stopId: String!) {
+query DeparturesForStopIdQuery($stopId: String!) {
     stop(id: $stopId) {
         name
         stoptimesWithoutPatterns(numberOfDepartures: 10) {
-            stop {
-                platformCode
-            }
-            scheduledArrival
-            realtimeArrival
-            arrivalDelay
             scheduledDeparture
             realtimeDeparture
             departureDelay
-            realtime
-            realtimeState
-            serviceDay
             headsign
+            trip {
+                route {
+                    shortName
+                }
+            }
+            #serviceDay
+            #scheduledArrival
+            #realtimeArrival
+            #arrivalDelay
+            #realtime
+            #realtimeState
         }
     }
 }

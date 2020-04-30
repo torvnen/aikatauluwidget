@@ -1,7 +1,6 @@
 package com.example.aikataulu.models
 
-import com.example.aikataulu.ArrivalsForStopIdQuery
-import com.example.aikataulu.StopByIdQuery
+import com.example.aikataulu.DeparturesForStopIdQuery
 import java.lang.StringBuilder
 
 val newLine = System.lineSeparator()
@@ -20,7 +19,7 @@ fun toDoubleDigitString(i: Int?): String {
     return if (j >= 10) j.toString() else "0${j}"
 }
 
-fun formatArrivals(arrivals: ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern>): String {
+fun formatArrivals(arrivals: ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>): String {
     val sb = StringBuilder()
     arrivals.forEach {arrival ->
         sb.append("${Arrival(arrival)}$newLine")
