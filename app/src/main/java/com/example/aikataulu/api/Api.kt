@@ -2,20 +2,14 @@
 
 package com.example.aikataulu.api
 
-import android.os.AsyncTask
-import android.util.ArrayMap
-import android.util.Log
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.apollographql.apollo.request.RequestHeaders
 import com.example.aikataulu.DeparturesForStopIdQuery
 import com.example.aikataulu.StopByIdQuery
 import com.example.aikataulu.StopByNameQuery
-import com.example.aikataulu.models.Arrival
 import com.example.aikataulu.models.Stop
-import okhttp3.internal.wait
 import java.lang.Thread.sleep
 
 class CallbackTest : ApolloCall.Callback<StopByNameQuery.Data>() {

@@ -22,7 +22,7 @@ fun toDoubleDigitString(i: Int?): String {
 fun formatArrivals(arrivals: ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>): String {
     val sb = StringBuilder()
     arrivals.forEach {arrival ->
-        sb.append("${Arrival(arrival)}$newLine")
+        sb.append("${Departure(arrival)}$newLine")
     }
     sb.setLength(kotlin.math.max(sb.length - 1, 0)) // Trim last newLine
     return sb.toString()

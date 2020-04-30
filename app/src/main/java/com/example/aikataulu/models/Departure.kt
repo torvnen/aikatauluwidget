@@ -3,7 +3,7 @@ package com.example.aikataulu.models
 import com.example.aikataulu.DeparturesForStopIdQuery
 import java.lang.StringBuilder
 
-class Arrival(stoptimeWithoutPattern: DeparturesForStopIdQuery.StoptimesWithoutPattern) {
+class Departure(stoptimeWithoutPattern: DeparturesForStopIdQuery.StoptimesWithoutPattern) {
     var scheduledDeparture = "??:??"
     var realtimeDeparture = "??:??"
     val isOnTime = stoptimeWithoutPattern.departureDelay() == null || kotlin.math.abs(stoptimeWithoutPattern.departureDelay()!!.toInt()) < 60
