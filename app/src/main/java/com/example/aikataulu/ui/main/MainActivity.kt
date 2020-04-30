@@ -11,9 +11,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.widget.*
-import com.example.aikataulu.R
-import com.example.aikataulu.TimetableService
-import com.example.aikataulu.TimetableConfiguration
+import com.example.aikataulu.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -48,15 +46,25 @@ class MainActivity : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.saveButton)
         val stopName = findViewById<EditText>(R.id.stopName)
         val autoUpdate = findViewById<Switch>(R.id.autoUpdate)
+        val updateInterval = findViewById<EditText>(R.id.updateInterval)
+        updateInterval.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) { }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // If string is not int-parseable, set default config value
+                TimetableConfiguration.data.updateIntervalS = s.toString().toIntOrNull()
+                    ?: TimetableConfigurationData().updateIntervalS
+            }
+        })
         stopName.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) { }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                TimetableConfiguration.stopName = s.toString()
+                TimetableConfiguration.data.stopName = s.toString()
             }
         })
         autoUpdate.setOnCheckedChangeListener { _, isChecked ->
-            TimetableConfiguration.autoUpdate = isChecked
+            TimetableConfiguration.data.autoUpdate = isChecked
         }
         saveButton.setOnClickListener {
             // Save to disk
@@ -71,9 +79,7 @@ class MainActivity : AppCompatActivity() {
             if (widgetId != null) {
                 // Update app widget
                 // TODO check if this works without specifying EXTRA_APPWIDGET_ID to AppWidgetManager
-                RemoteViews(this.packageName,
-                    R.layout.widget
-                ).also { views->
+                RemoteViews(this.packageName, R.layout.widget).also { views->
                     AppWidgetManager.getInstance(this).updateAppWidget(widgetId.toInt(), views)
                 }
                 val resultValue = Intent().apply {
@@ -86,14 +92,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadUiState() {
-        TimetableConfiguration.ensureLoaded(applicationContext)
+        val config = TimetableConfiguration.ensureLoaded(applicationContext)
         val stopName = findViewById<EditText>(R.id.stopName)
         val autoUpdate = findViewById<Switch>(R.id.autoUpdate)
         val updateInterval = findViewById<EditText>(R.id.updateInterval)
 
-        autoUpdate.isChecked = TimetableConfiguration.autoUpdate
-        stopName.setText(TimetableConfiguration.stopName)
-        updateInterval.setText(TimetableConfiguration.updateIntervalS.toString())
+        autoUpdate.isChecked = config.autoUpdate
+        stopName.setText(config.stopName)
+        updateInterval.setText(config.updateIntervalS.toString())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

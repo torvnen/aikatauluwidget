@@ -12,7 +12,6 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
-import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.models.formatArrivals
 import com.example.aikataulu.ui.main.MainActivity
 import java.util.*
@@ -35,8 +34,8 @@ class TimetableService : Service() {
 
     private fun setAutoUpdate(b: Boolean) {
         ensureTimedTaskCanceled()
-        TimetableConfiguration.ensureLoaded(applicationContext)
-        val stopName = TimetableConfiguration.stopName
+        val config = TimetableConfiguration.ensureLoaded(applicationContext)
+        val stopName = config.stopName
         if (b && stopName != null) {
             val stops = Api.getStopsContainingText(stopName)
             if (stops.any()) {
@@ -50,7 +49,7 @@ class TimetableService : Service() {
                     }
                 }
                 _timer = Timer()
-                _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * TimetableConfiguration.updateIntervalS).toLong())
+                _timer.scheduleAtFixedRate(_timerTask, 0, (1000 * config.updateIntervalS).toLong())
             }
         }
     }
@@ -86,8 +85,8 @@ class TimetableService : Service() {
         Log.i(TAG, "Received onStartCommand with intent name ${intent?.action}")
         // On any start command, start/stop/restart auto-updating.
         ensureTimedTaskCanceled()
-        TimetableConfiguration.ensureLoaded(applicationContext)
-        setAutoUpdate(TimetableConfiguration.autoUpdate)
+        val config = TimetableConfiguration.ensureLoaded(applicationContext)
+        setAutoUpdate(config.autoUpdate)
 
         return super.onStartCommand(intent, flags, startId)
     }

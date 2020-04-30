@@ -3,6 +3,7 @@ package com.example.aikataulu;
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -11,19 +12,10 @@ import com.example.aikataulu.ui.main.MainActivity
 
 
 class WidgetProvider : AppWidgetProvider() {
-    private val TAG = "TIMETABLE.WidgetProvider"
-
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        // Start Service (don't worry about repeating, multiple calls will be handled by the system)
-        Log.i(TAG, "Invoking service startup")
-        context.startForegroundService(Intent(context, TimetableService::class.java))
-
-        // Attach click handler to open configuration
-        appWidgetIds.forEach { widgetId ->
+    companion object {
+        const val TAG = "TIMETABLE.WidgetProvider"
+        fun attachWidgetClickHandler(context: Context, widgetId: Int) {
+            Log.i(TAG, "Setting onClick event for app widget (id=$widgetId)")
             val intent = Intent(context, MainActivity::class.java)
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
@@ -31,8 +23,31 @@ class WidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget)
             views.setOnClickPendingIntent(R.id.widgetContainer, pendingIntent)
 
-            appWidgetManager.updateAppWidget(widgetId, views)
+            AppWidgetManager.getInstance(context).updateAppWidget(widgetId, views)
         }
+    }
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        // Start Service (don't worry about repeating, multiple calls will be handled by the system)
+        Log.i(TAG, "onUpdate()")
+        Log.i(TAG, "Starting service")
+        context.startForegroundService(Intent(context, TimetableService::class.java))
+
+        // Attach click handler for all widgets
+        appWidgetIds.forEach { attachWidgetClickHandler(context, it) }
+    }
+
+    override fun onEnabled(context: Context?) {
+        super.onEnabled(context)
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        appWidgetManager.getAppWidgetIds(ComponentName(context!!.applicationContext, WidgetProvider::class.java))
+            .forEach {
+                attachWidgetClickHandler(context, it)
+            }
     }
 
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {

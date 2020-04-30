@@ -32,6 +32,27 @@ class CallbackTest : ApolloCall.Callback<StopByNameQuery.Data>() {
 object Api {
     private val apolloClient: ApolloClient = ApolloClient.builder().serverUrl(Config.apiUrl).build()
 
+    fun getPatternsByStopId(id: String): List<StopByIdQuery.Pattern> {
+        val patterns = ArrayList<StopByIdQuery.Pattern>()
+        var ready = false
+        apolloClient.query(StopByIdQuery(id)).enqueue(object: ApolloCall.Callback<StopByIdQuery.Data>() {
+            override fun onFailure(e: ApolloException) {
+                ready = true
+            }
+
+            override fun onResponse(response: Response<StopByIdQuery.Data>) {
+                for (pattern in response.data!!.stop()!!.patterns()!!.iterator()) {
+                    patterns.add(pattern)
+                }
+                ready = true
+            }
+        })
+
+        while (!ready) sleep(10)
+
+        return patterns
+    }
+
     // Note! This is a blocking call
     fun getStopsContainingText(text: String): ArrayList<Stop> {
         val stops = ArrayList<Stop>()
@@ -58,11 +79,7 @@ object Api {
     fun getArrivalsForStop(stopId: String): ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern> {
         val arrivals = ArrayList<ArrivalsForStopIdQuery.StoptimesWithoutPattern>()
         var ready = false
-        val headersMap = HashMap<String, String>()
-        headersMap["Content-Type"] = "application/json"
-        headersMap["Accept"] = "application/json"
         apolloClient.query(ArrivalsForStopIdQuery(stopId))
-            .requestHeaders(RequestHeaders.builder().addHeaders(headersMap).build())
             .enqueue(object: ApolloCall.Callback<ArrivalsForStopIdQuery.Data>() {
             override fun onFailure(e: ApolloException) {
                 System.err.println(e.message.toString())

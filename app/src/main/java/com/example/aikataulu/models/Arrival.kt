@@ -8,6 +8,7 @@ class Arrival(stoptimeWithoutPattern: ArrivalsForStopIdQuery.StoptimesWithoutPat
     var realtimeDeparture = "??:??"
     val isOnTime = stoptimeWithoutPattern.departureDelay() != null && kotlin.math.abs(stoptimeWithoutPattern.departureDelay()!!.toInt()) > 60
     val headsign = stoptimeWithoutPattern.headsign()
+    val platformCode = stoptimeWithoutPattern.stop()?.platformCode()
     init {
         scheduledDeparture = timeToString(stoptimeWithoutPattern.scheduledDeparture())
         realtimeDeparture = timeToString(stoptimeWithoutPattern.realtimeDeparture())
@@ -15,8 +16,8 @@ class Arrival(stoptimeWithoutPattern: ArrivalsForStopIdQuery.StoptimesWithoutPat
 
     override fun toString(): String {
         val sb = StringBuilder()
-        sb.append("$headsign\t$scheduledDeparture")
-        if (!isOnTime) sb.append("($realtimeDeparture)")
+        sb.append("$platformCode   $headsign    $scheduledDeparture")
+        if (!isOnTime) sb.append(" ($realtimeDeparture)")
         return sb.toString()
     }
 }

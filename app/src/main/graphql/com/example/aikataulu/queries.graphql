@@ -29,7 +29,10 @@ query StopByNameQuery($name: String!) {
 query ArrivalsForStopIdQuery($stopId: String!) {
     stop(id: $stopId) {
         name
-        stoptimesWithoutPatterns {
+        stoptimesWithoutPatterns(numberOfDepartures: 10) {
+            stop {
+                platformCode
+            }
             scheduledArrival
             realtimeArrival
             arrivalDelay

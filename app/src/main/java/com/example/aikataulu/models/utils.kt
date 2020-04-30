@@ -1,6 +1,7 @@
 package com.example.aikataulu.models
 
 import com.example.aikataulu.ArrivalsForStopIdQuery
+import com.example.aikataulu.StopByIdQuery
 import java.lang.StringBuilder
 
 val newLine = System.lineSeparator()
