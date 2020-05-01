@@ -4,13 +4,11 @@ import android.content.Context
 import android.util.Log
 import com.example.aikataulu.models.newLine
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
-import com.google.gson.annotations.Expose
+import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.lang.Exception
 import java.lang.IllegalStateException
-import java.lang.reflect.Modifier
 
 data class TimetableConfigurationData(var updateIntervalS: Int = 10, var stopName: String? = null, var autoUpdate: Boolean = false) { }
 
@@ -19,9 +17,10 @@ object TimetableConfiguration {
     private var isLoaded = false
     private const val TAG = "TIMETABLE.Configuration"
     private const val fileName = "configuration.json"
-    var data: TimetableConfigurationData = TimetableConfigurationData()
+    var data = HashMap<Int, TimetableConfigurationData>()
+    val jsonType = object : TypeToken<HashMap<Int, TimetableConfigurationData>>() {}.type
 
-    private fun loadFromFile(context: Context): TimetableConfigurationData {
+    private fun loadFromFile(context: Context): HashMap<Int, TimetableConfigurationData> {
         val file = File(context.filesDir.path).resolve(fileName)
         if (!file.exists()) {
             Log.i(TAG, "Configuration file did not exist. Creating configuration file...")
@@ -33,7 +32,7 @@ object TimetableConfiguration {
                 val json = it.readLines().joinToString(newLine)
                 it.close()
                 try {
-                    data = Gson().fromJson(json, TimetableConfigurationData::class.javaObjectType)
+                    data = Gson().fromJson(json, jsonType)
                 } catch(ex: Exception) {
                     when(ex) {
                         is JsonSyntaxException,
@@ -51,7 +50,12 @@ object TimetableConfiguration {
         return data
     }
 
-    fun saveToFile(context: Context): TimetableConfigurationData {
+    fun loadConfigForWidget(context: Context, widgetId: Int): TimetableConfigurationData {
+        return TimetableConfiguration.ensureLoaded(context) // Load persisted config
+            .getOrElse(widgetId, { TimetableConfigurationData() }) // Or use default values
+    }
+
+    fun saveToFile(context: Context): HashMap<Int, TimetableConfigurationData> {
         // Open file stream
         context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
             // Serialize and write to file
@@ -64,7 +68,7 @@ object TimetableConfiguration {
         return data
     }
 
-    fun ensureLoaded(context: Context): TimetableConfigurationData {
+    fun ensureLoaded(context: Context): HashMap<Int, TimetableConfigurationData> {
         val caller = Thread.currentThread().stackTrace[3].let {
             "${it.className}::${it.methodName}"
         }

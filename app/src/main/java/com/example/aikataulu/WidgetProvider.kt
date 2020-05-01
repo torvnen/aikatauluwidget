@@ -3,11 +3,13 @@ package com.example.aikataulu;
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
+import com.example.aikataulu.ui.main.ConfigurationActivity
 import com.example.aikataulu.ui.main.MainActivity
 
 
@@ -16,7 +18,7 @@ class WidgetProvider : AppWidgetProvider() {
         const val TAG = "TIMETABLE.WidgetProvider"
         fun attachWidgetClickHandler(context: Context, widgetId: Int) {
             Log.i(TAG, "Setting onClick event for app widget (id=$widgetId)")
-            val intent = Intent(context, MainActivity::class.java)
+            val intent = Intent(context, ConfigurationActivity::class.java)
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
@@ -34,11 +36,10 @@ class WidgetProvider : AppWidgetProvider() {
     ) {
         // Start Service (don't worry about repeating, multiple calls will be handled by the system)
         Log.i(TAG, "onUpdate()")
-        Log.i(TAG, "Starting service")
-        context.startForegroundService(Intent(context, TimetableService::class.java))
 
         // Attach click handler for all widgets
-        appWidgetIds.forEach { attachWidgetClickHandler(context, it) }
+        appWidgetIds.forEach {
+            attachWidgetClickHandler(context, it) }
     }
 
     override fun onEnabled(context: Context?) {
