@@ -51,8 +51,9 @@ object TimetableConfiguration {
     }
 
     fun loadConfigForWidget(context: Context, widgetId: Int): TimetableConfigurationData {
-        return TimetableConfiguration.ensureLoaded(context) // Load persisted config
-            .getOrElse(widgetId, { TimetableConfigurationData() }) // Or use default values
+        Log.i(TAG, "Loading config for widget id $widgetId")
+        return ensureLoaded(context) // Load persisted config
+            .getOrElse(widgetId, { TimetableConfigurationData() }) // Fallback to default values
     }
 
     fun saveToFile(context: Context): HashMap<Int, TimetableConfigurationData> {

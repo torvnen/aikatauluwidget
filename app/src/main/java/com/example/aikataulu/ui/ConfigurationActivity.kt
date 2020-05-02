@@ -1,14 +1,16 @@
 package com.example.aikataulu.ui.main
 
-import android.app.*
+import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Switch
+import androidx.appcompat.app.AppCompatActivity
 import com.example.aikataulu.*
 
 class ConfigurationActivity : AppCompatActivity() {
@@ -41,28 +43,35 @@ class ConfigurationActivity : AppCompatActivity() {
             config.autoUpdate = isChecked
         }
         saveButton.setOnClickListener {
+            val wId = widgetId!! // Make it throw right away if null/unset. Should never occur.
             // Update global object
-            TimetableConfiguration.data[widgetId!!] = config
+            TimetableConfiguration.data[wId] = config
             // Save to disk
             TimetableConfiguration.saveToFile(applicationContext)
             // Notify Service by invoking its Start method
             val serviceIntent = Intent(applicationContext, TimetableService::class.java)
-            serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId!!)
+            serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
             applicationContext.startForegroundService(serviceIntent)
 
-            val widgetId = widgetId
-            if (widgetId != null) {
-                // Update app widget
-                // TODO check if this works without specifying EXTRA_APPWIDGET_ID to AppWidgetManager
-                RemoteViews(this.packageName, R.layout.widget).also { views->
-                    AppWidgetManager.getInstance(this).updateAppWidget(widgetId.toInt(), views)
-                }
-                val resultValue = Intent().apply {
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-                }
-                setResult(Activity.RESULT_OK, resultValue)
-                finish()
-            } else Log.d("TIMETABLE", "Cannot finish activity: widgetId is not set.")
+            // Set result of activity
+            val resultValue = Intent().apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
+            }
+            setResult(Activity.RESULT_OK, resultValue)
+
+            // Notify Widgets of update
+            val updateIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE, null, this, WidgetProvider::class.java)
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(wId))
+            sendBroadcast(updateIntent)
+
+            // Close main activity
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            intent.putExtra("Exit", true)
+            startActivity(intent)
+            // Finish activity
+            finish()
         }
     }
 
@@ -77,7 +86,6 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(TAG, "onCreate()")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.configuration_activity)
 
@@ -85,6 +93,7 @@ class ConfigurationActivity : AppCompatActivity() {
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+        Log.d(TAG, "Creating configuration view for widget (id=$widgetId)")
         config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId!!)
         attachEventHandlers()
         loadUiState()

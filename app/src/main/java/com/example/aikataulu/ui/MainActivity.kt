@@ -39,6 +39,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate()")
         super.onCreate(savedInstanceState)
+        if( intent.getBooleanExtra("Exit", false)){
+            Log.d(TAG, "Exit flag was set - finishing activity.")
+            finish()
+        }
         setContentView(R.layout.main_activity)
         if (!notificationChannelInitiated)
             notificationChannelId(

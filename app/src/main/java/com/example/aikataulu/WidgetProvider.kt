@@ -9,46 +9,38 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
 import com.example.aikataulu.ui.main.ConfigurationActivity
 import com.example.aikataulu.ui.main.MainActivity
 
 
 class WidgetProvider : AppWidgetProvider() {
-    companion object {
-        const val TAG = "TIMETABLE.WidgetProvider"
-        fun attachWidgetClickHandler(context: Context, widgetId: Int) {
-            Log.i(TAG, "Setting onClick event for app widget (id=$widgetId)")
-            val intent = Intent(context, ConfigurationActivity::class.java)
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-            val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
-
-            val views = RemoteViews(context.packageName, R.layout.widget)
-            views.setOnClickPendingIntent(R.id.widgetContainer, pendingIntent)
-
-            AppWidgetManager.getInstance(context).updateAppWidget(widgetId, views)
-        }
-    }
+    val TAG = "TIMETABLE.WidgetProvider"
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // Start Service (don't worry about repeating, multiple calls will be handled by the system)
         Log.i(TAG, "onUpdate()")
+        // Perform this loop procedure for each App Widget that belongs to this provider
+        appWidgetIds.forEach { appWidgetId ->
+            Log.i(TAG, "Attaching click handler to widget id $appWidgetId")
+            val pendingIntent: PendingIntent = Intent(context, ConfigurationActivity::class.java)
+                .let { intent ->
+                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
+                    intent.action = "configure_widget-$appWidgetId"
+                    PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                }
+            val views: RemoteViews = RemoteViews(context.packageName, R.layout.widget).apply {
+                }.apply {
+                    setOnClickPendingIntent(R.id.widgetContainer, pendingIntent)
+                    setTextViewText(R.id.widgetTextView2, "#$appWidgetId")
+                }
 
-        // Attach click handler for all widgets
-        appWidgetIds.forEach {
-            attachWidgetClickHandler(context, it) }
-    }
-
-    override fun onEnabled(context: Context?) {
-        super.onEnabled(context)
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        appWidgetManager.getAppWidgetIds(ComponentName(context!!.applicationContext, WidgetProvider::class.java))
-            .forEach {
-                attachWidgetClickHandler(context, it)
-            }
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
     }
 
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
