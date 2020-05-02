@@ -70,7 +70,7 @@ object Api {
         return stops
     }
 
-    fun getArrivalsForStop(stopId: String): ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern> {
+    fun getDeparturesForStopId(stopId: String): ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern> {
         val arrivals = ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>()
         var ready = false
         apolloClient.query(DeparturesForStopIdQuery(stopId))

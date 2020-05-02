@@ -18,7 +18,7 @@ object TimetableConfiguration {
     private const val TAG = "TIMETABLE.Configuration"
     private const val fileName = "configuration.json"
     var data = HashMap<Int, TimetableConfigurationData>()
-    val jsonType = object : TypeToken<HashMap<Int, TimetableConfigurationData>>() {}.type
+    val jsonType = object : TypeToken<HashMap<Int, TimetableConfigurationData>>(){}.type
 
     private fun loadFromFile(context: Context): HashMap<Int, TimetableConfigurationData> {
         val file = File(context.filesDir.path).resolve(fileName)

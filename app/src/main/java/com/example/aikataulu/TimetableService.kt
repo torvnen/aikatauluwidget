@@ -3,7 +3,6 @@ package com.example.aikataulu
 import android.app.NotificationManager
 import android.app.Service
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
@@ -12,8 +11,10 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
-import com.example.aikataulu.models.formatArrivals
-import com.example.aikataulu.ui.main.MainActivity
+import com.example.aikataulu.models.Departure
+import com.example.aikataulu.models.formatDepartures
+import com.example.aikataulu.ui.MainActivity
+import com.google.gson.Gson
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -43,9 +44,15 @@ class TimetableService : Service() {
                 _timerTasks[widgetId] = object: TimerTask() {
                     override fun run() {
                         Log.i(TAG, "Fetching data for stop ${stop.name} (${stop.hrtId})...")
-                        val arrivals = Api.getArrivalsForStop(stop.hrtId)
-                        Log.i(TAG, "Received ${arrivals.count()} arrivals")
-                        setWidgetText(widgetId, formatArrivals(arrivals))
+                        val departures = Api.getDeparturesForStopId(stop.hrtId)
+                        Log.i(TAG, "Received ${departures.count()} departures")
+                        val departuresJson = departures.map { Departure(it) }.let { Gson().toJson(it) }
+                        setWidgetText(widgetId, formatDepartures(departures))
+//                        startActivity(Intent() // TODO TODO TODO USE APPWIDGETMANAGER.UPDATEWIDGET FOR THIS
+//                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                            .setAction(WidgetProvider.ACTION_RECEIVE_DEPARTURES)
+//                            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+//                            .putExtra(WidgetProvider.EXTRA_DEPARTURES, departuresJson))
                     }
                 }
                 _timers[widgetId] = Timer()

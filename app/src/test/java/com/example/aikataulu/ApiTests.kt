@@ -15,7 +15,7 @@ class ApiTests {
         val stops = Api.getStopsContainingText("töölö")
         assertTrue(stops.count() > 0)
         val stopId = stops.first().hrtId
-        val arrivals = Api.getArrivalsForStop(stopId)
+        val arrivals = Api.getDeparturesForStopId(stopId)
         assertTrue(arrivals.count() > 0)
     }
 }

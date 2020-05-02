@@ -1,7 +1,6 @@
-package com.example.aikataulu.ui.main
+package com.example.aikataulu.ui
 
 import android.app.*
-import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity

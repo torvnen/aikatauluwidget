@@ -4,18 +4,23 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.appwidget.AppWidgetProviderInfo
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
-import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
-import com.example.aikataulu.ui.main.ConfigurationActivity
-import com.example.aikataulu.ui.main.MainActivity
+import com.example.aikataulu.models.Departure
+import com.example.aikataulu.ui.ConfigurationActivity
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 
 class WidgetProvider : AppWidgetProvider() {
-    val TAG = "TIMETABLE.WidgetProvider"
+    companion object {
+        private const val TAG = "TIMETABLE.WidgetProvider"
+        private val departuresJsonType = object: TypeToken<ArrayList<Departure>>(){}.type
+        const val ACTION_RECEIVE_DEPARTURES = "RECEIVE_DEPARTURES"
+        const val EXTRA_DEPARTURES = "DEPARTURES"
+    }
 
     override fun onUpdate(
         context: Context,
@@ -36,10 +41,19 @@ class WidgetProvider : AppWidgetProvider() {
             val views: RemoteViews = RemoteViews(context.packageName, R.layout.widget).apply {
                 }.apply {
                     setOnClickPendingIntent(R.id.widgetContainer, pendingIntent)
-                    setTextViewText(R.id.widgetTextView2, "#$appWidgetId")
                 }
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+    }
+
+    // Handle receiving of data from service
+    override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
+        if (intent != null && intent.action == ACTION_RECEIVE_DEPARTURES) {
+            val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+            val departures = Gson().fromJson<ArrayList<Departure>>(intent.getStringExtra(EXTRA_DEPARTURES), departuresJsonType)
+            Log.d(TAG, "WidgetProvider received ${departures.count()} departures for widget (id=$widgetId)")
         }
     }
 

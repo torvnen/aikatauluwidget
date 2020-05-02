@@ -19,11 +19,9 @@ fun toDoubleDigitString(i: Int?): String {
     return if (j >= 10) j.toString() else "0${j}"
 }
 
-fun formatArrivals(arrivals: ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>): String {
+fun formatDepartures(departures: ArrayList<DeparturesForStopIdQuery.StoptimesWithoutPattern>): String {
     val sb = StringBuilder()
-    arrivals.forEach {arrival ->
-        sb.append("${Departure(arrival)}$newLine")
-    }
+    departures.forEach { sb.append("${Departure(it)}$newLine") }
     sb.setLength(kotlin.math.max(sb.length - 1, 0)) // Trim last newLine
     return sb.toString()
 }

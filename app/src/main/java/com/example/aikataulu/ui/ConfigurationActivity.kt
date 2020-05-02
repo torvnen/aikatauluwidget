@@ -1,4 +1,4 @@
-package com.example.aikataulu.ui.main
+package com.example.aikataulu.ui
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
