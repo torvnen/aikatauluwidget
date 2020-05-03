@@ -7,9 +7,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Switch
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.aikataulu.*
 
@@ -60,10 +58,11 @@ class ConfigurationActivity : AppCompatActivity() {
             setResult(Activity.RESULT_OK, resultValue)
 
             // Notify Widgets of update
-            val updateIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE, null, this, WidgetProvider::class.java)
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(wId))
-            sendBroadcast(updateIntent)
+            AppWidgetManager.getInstance(this).apply {
+                updateAppWidget(wId, RemoteViews(application.packageName, R.layout.widget).apply {
+                    setRemoteAdapter(R.id.widget_content_target, Intent(applicationContext, TimetableService::class.java))
+                })
+            }
 
             // Close main activity
             val intent = Intent(this, MainActivity::class.java)

@@ -1,24 +1,23 @@
 package com.example.aikataulu
 
 import android.app.NotificationManager
-import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
+import android.widget.RemoteViewsService
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.models.Departure
-import com.example.aikataulu.models.formatDepartures
 import com.example.aikataulu.ui.MainActivity
-import com.google.gson.Gson
+import com.example.aikataulu.ui.ViewFactory
 import java.util.*
 import kotlin.collections.HashMap
 
-class TimetableService : Service() {
+class TimetableService : RemoteViewsService() {
     private val _timerTasks = HashMap<Int, TimerTask>()
     private val _timers = HashMap<Int, Timer>()
 
@@ -43,16 +42,12 @@ class TimetableService : Service() {
                 val stop = stops.first()
                 _timerTasks[widgetId] = object: TimerTask() {
                     override fun run() {
-                        Log.i(TAG, "Fetching data for stop ${stop.name} (${stop.hrtId})...")
-                        val departures = Api.getDeparturesForStopId(stop.hrtId)
-                        Log.i(TAG, "Received ${departures.count()} departures")
-                        val departuresJson = departures.map { Departure(it) }.let { Gson().toJson(it) }
-                        setWidgetText(widgetId, formatDepartures(departures))
-//                        startActivity(Intent() // TODO TODO TODO USE APPWIDGETMANAGER.UPDATEWIDGET FOR THIS
-//                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                            .setAction(WidgetProvider.ACTION_RECEIVE_DEPARTURES)
-//                            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-//                            .putExtra(WidgetProvider.EXTRA_DEPARTURES, departuresJson))
+                        Log.d(TAG, "Fetching data for stop ${stop.name} (${stop.hrtId})...")
+                        val departures = Api.getDeparturesForStopId(stop.hrtId).map { Departure(it) }
+                        Log.d(TAG, "Received ${departures.count()} departures")
+
+                        // Notify WidgetProvider of the changes
+                        TimetableWidgetProvider.sendUpdateWidgetBroadcast(applicationContext, widgetId, departures)
                     }
                 }
                 _timers[widgetId] = Timer()
@@ -85,6 +80,12 @@ class TimetableService : Service() {
 
         startForeground(creationNotificationId, builder.build())
         Log.i(TAG, "Service was created.")
+    }
+
+    override fun onGetViewFactory(intent: Intent?): RemoteViewsService.RemoteViewsFactory {
+        Log.i(TAG, "onGetViewFactory()")
+        val i = 0
+        return ViewFactory(applicationContext, intent!!)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

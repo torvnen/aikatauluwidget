@@ -23,7 +23,7 @@ object TimetableConfiguration {
     private fun loadFromFile(context: Context): HashMap<Int, TimetableConfigurationData> {
         val file = File(context.filesDir.path).resolve(fileName)
         if (!file.exists()) {
-            Log.i(TAG, "Configuration file did not exist. Creating configuration file...")
+            Log.d(TAG, "Configuration file did not exist. Creating configuration file...")
             saveToFile(context)
         } else {
             // Open file stream
@@ -51,7 +51,7 @@ object TimetableConfiguration {
     }
 
     fun loadConfigForWidget(context: Context, widgetId: Int): TimetableConfigurationData {
-        Log.i(TAG, "Loading config for widget id $widgetId")
+        Log.d(TAG, "Loading config for widget id $widgetId")
         return ensureLoaded(context) // Load persisted config
             .getOrElse(widgetId, { TimetableConfigurationData() }) // Fallback to default values
     }
@@ -65,7 +65,7 @@ object TimetableConfiguration {
             it.close()
             Log.d(TAG, "Configuration:$newLine\t$json")
         }
-        Log.i(TAG, "Configuration file was saved.")
+        Log.d(TAG, "Configuration file was saved.")
         return data
     }
 
@@ -73,11 +73,11 @@ object TimetableConfiguration {
         val caller = Thread.currentThread().stackTrace[3].let {
             "${it.className}::${it.methodName}"
         }
-        Log.i(TAG, "Configuration loading initiated by $caller...")
+        Log.d(TAG, "Configuration loading initiated by $caller...")
         if (!isLoaded) {
             loadFromFile(context)
-            Log.i(TAG, "Configuration loaded.")
-        } else Log.i(TAG, "Configuration was already loaded.")
+            Log.d(TAG, "Configuration loaded.")
+        } else Log.d(TAG, "Configuration was already loaded.")
         return data
     }
 }
