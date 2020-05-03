@@ -1,23 +1,22 @@
 package com.example.aikataulu
 
 import android.app.NotificationManager
+import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
-import android.widget.RemoteViewsService
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.models.Departure
 import com.example.aikataulu.ui.MainActivity
-import com.example.aikataulu.ui.ViewFactory
 import java.util.*
 import kotlin.collections.HashMap
 
-class TimetableService : RemoteViewsService() {
+class TimetableService : Service() {
     private val _timerTasks = HashMap<Int, TimerTask>()
     private val _timers = HashMap<Int, Timer>()
 
@@ -80,12 +79,6 @@ class TimetableService : RemoteViewsService() {
 
         startForeground(creationNotificationId, builder.build())
         Log.i(TAG, "Service was created.")
-    }
-
-    override fun onGetViewFactory(intent: Intent?): RemoteViewsService.RemoteViewsFactory {
-        Log.i(TAG, "onGetViewFactory()")
-        val i = 0
-        return ViewFactory(applicationContext, intent!!)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

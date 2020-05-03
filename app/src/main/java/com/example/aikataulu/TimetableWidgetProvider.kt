@@ -41,7 +41,10 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                 Log.d(TAG, "WidgetProvider received ${departures.count()} departures for widget (id=$widgetId)")
                 AppWidgetManager.getInstance(context).apply {
                     updateAppWidget(widgetId, RemoteViews(context!!.packageName, R.layout.widget).apply {
-                        setRemoteAdapter(R.id.widget_content_target, Intent(context, TimetableService::class.java))
+                        setRemoteAdapter(R.id.widget_content_target, Intent(context, TimetableRemoteViewsService::class.java)
+                            .apply {
+                                putExtra(EXTRA_DEPARTURES, departuresJson)
+                            })
                     })
                     notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)
                 }
@@ -67,7 +70,6 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                         intent.action = "configure_widget-$appWidgetId"
                         PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
                     })
-                setRemoteAdapter(R.id.widget_content_target, Intent(context, TimetableService::class.java))
             })
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)

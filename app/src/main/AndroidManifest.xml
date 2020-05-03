@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.aikataulu">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.BIND_REMOTEVIEWS" tools:ignore="ProtectedPermissions" />
 
     <application
         android:allowBackup="true"
@@ -26,8 +24,10 @@
         </activity>
         <service android:enabled="true"
             android:exported="false"
-            android:name="com.example.aikataulu.TimetableService"
+            android:name=".TimetableService"
             android:foregroundServiceType="dataSync"
+            android:permission="android.permission.INTERNET"/>
+        <service android:name=".TimetableRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS"/>
         <receiver android:name=".TimetableWidgetProvider" >
             <intent-filter>
