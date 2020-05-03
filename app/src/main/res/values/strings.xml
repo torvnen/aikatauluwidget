@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Aikataulu</string>
+    <string name="widget_placeholder">No timetable loaded</string>
+    <string name="placeholder_realtime_departure">(12:22)</string>
+    <string name="placeholder_scheduled_departure">12:20</string>
+    <string name="placeholder_route_destination">Herttoniemi</string>
+    <string name="placeholder_route_name">80</string>
+    <string name="main_activity_info_text">Add a home screen widget to configure and use this app.</string>
+    <string name="label_stop_name">Stop name</string>
+    <string name="label_auto_update">Auto-update</string>
+    <string name="label_auto_update_interval">Auto-update interval</string>
+    <string name="label_auto_update_unit">seconds</string>
+    <string name="label_button_save">Save settings</string>
 </resources>

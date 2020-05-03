@@ -11,11 +11,13 @@
             android:id="@+id/widgetTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No timetable loaded" />
+            android:text="@string/widget_placeholder"/>
         <ListView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             tools:listitem="@layout/single_departure"
-            android:id="@+id/widget_content_target"/>
+            android:id="@+id/widget_content_target"
+            android:dividerHeight="1dp"
+            android:divider="#666"/>
 </LinearLayout>
