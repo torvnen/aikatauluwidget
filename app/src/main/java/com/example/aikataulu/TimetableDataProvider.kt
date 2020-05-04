@@ -10,7 +10,7 @@ import com.google.gson.Gson
 
 // https://developer.android.com/guide/topics/providers/content-provider-basics
 class TimetableDataProvider : ContentProvider() {
-    private val _data = HashMap<Int, Timetable>()
+    private val _data = ArrayList<Timetable>()
 
     companion object {
         const val COLUMN_TIMETABLE = "TIMETABLE"
@@ -24,11 +24,13 @@ class TimetableDataProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
-        return MatrixCursor(arrayOf(COLUMN_TIMETABLE)).apply {
-            if (selection != null) {
-                val widgetId = selection.toInt()
-                if (_data.containsKey(widgetId)) addRow(arrayOf(_data[widgetId]))
-                else _data[widgetId] = Timetable()
+        // Return whole data set if selection is null.
+        val data = if (selection == null) _data else _data.filter { it.stop.hrtId == selection }
+        return MatrixCursor(Timetable.allColumns).apply {
+            data.forEach {
+                it.toMatrixRows().forEach {row ->
+                    addRow(row)
+                }
             }
         }
     }
@@ -43,10 +45,14 @@ class TimetableDataProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        val widgetId = selection!!.toInt()
+        val stopId = selection!!
         val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
+        val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
 
-        _data[widgetId] = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
+        _data.removeIf {
+            it.stop.hrtId == stopId
+        }
+        _data.add(timetable)
 
         context!!.contentResolver.notifyChange(uri, null)
         return 1
