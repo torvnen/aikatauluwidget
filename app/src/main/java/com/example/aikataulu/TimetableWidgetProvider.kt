@@ -18,11 +18,11 @@ import java.lang.reflect.Type
 class TimetableWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val TAG = "TIMETABLE.WidgetProvider"
-        const val ACTION_RECEIVE_DEPARTURES = "RECEIVE_DEPARTURES"
-        const val EXTRA_DEPARTURES = "DEPARTURES"
+        const val EXTRA_DEPARTURES = "EXTRA_DEPARTURES"
         val departuresJsonType: Type = object: TypeToken<ArrayList<Departure>>(){}.type
 
         // Send data to be handled by ViewFactory
+        // TODO Do not send data via this. Only notify of changes - ViewFactory should query DataProvider.
         fun sendUpdateWidgetBroadcast(context: Context, widgetId: Int, departures: List<Departure>) {
             context.sendBroadcast(Intent(context, TimetableWidgetProvider::class.java)
                 .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)

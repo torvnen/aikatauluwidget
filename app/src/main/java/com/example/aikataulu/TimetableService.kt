@@ -3,6 +3,7 @@ package com.example.aikataulu
 import android.app.NotificationManager
 import android.app.Service
 import android.appwidget.AppWidgetManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
@@ -12,7 +13,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.models.Departure
+import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.ui.MainActivity
+import com.google.gson.Gson
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -45,6 +48,16 @@ class TimetableService : Service() {
                         val departures = Api.getDeparturesForStopId(stop.hrtId).map { Departure(it) }
                         Log.d(TAG, "Received ${departures.count()} departures")
 
+                        // Update content
+//                        applicationContext.contentResolver
+//                            .query(TimetableDataProvider.CONTENT_URI, null, "$widgetId", null, null)
+//                            .apply {
+//                            }
+                        applicationContext.contentResolver.update(TimetableDataProvider.CONTENT_URI,
+                            ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(stop, departures))) },
+                            "$widgetId",
+                            emptyArray<String>()
+                        )
                         // Notify WidgetProvider of the changes
                         TimetableWidgetProvider.sendUpdateWidgetBroadcast(applicationContext, widgetId, departures)
                     }

@@ -6,7 +6,7 @@
     android:paddingVertical="4dp">
     <TextView
         style="@style/RouteNameShort"
-        android:id="@+id/textView1"
+        android:id="@+id/sd_tvRouteName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -16,7 +16,7 @@
     <TextView
         android:layout_weight="1"
         style="@style/SingleDepartureText"
-        android:id="@+id/textView2"
+        android:id="@+id/sd_tvDestination"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:layout_width="wrap_content"
@@ -33,13 +33,13 @@
         android:layout_marginEnd="20dp"
         android:padding="4dp">
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/sd_tvScheduledDeparture"
             style="@style/SingleDepartureText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/placeholder_scheduled_departure"/>
         <TextView
-            android:id="@+id/textView4"
+            android:id="@+id/sd_tvRealtimeDeparture"
             style="@style/SingleDepartureText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

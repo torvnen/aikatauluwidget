@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.util.Log
+import android.widget.AdapterView
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 
+// https://android.googlesource.com/platform/development/+/master/samples/WeatherListWidget/src/com/example/android/weatherlistwidget/WeatherWidgetService.java
 class TimetableRemoteViewsService : RemoteViewsService() {
     companion object {
         const val TAG = "TIMETABLE.RemoteViewsService"
@@ -41,7 +43,8 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         override fun onDataSetChanged() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
-            _cursor = _context.contentResolver.query()
+            // https://www.sitepoint.com/killer-way-to-show-a-list-of-items-in-android-collection-widget/
+            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, null, null)
         }
 
         override fun hasStableIds(): Boolean {
@@ -49,9 +52,12 @@ class TimetableRemoteViewsService : RemoteViewsService() {
             return true
         }
 
-        override fun getViewAt(position: Int): RemoteViews {
-            return RemoteViews(_context.packageName, R.id.widget_content_target).apply {
-
+        override fun getViewAt(position: Int): RemoteViews? {
+            if (position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
+                return null
+            }
+            return RemoteViews(_context.packageName, R.layout.single_departure).apply {
+                setTextViewText(R.id.sd_tvRouteName, "TEST")
             }
         }
 

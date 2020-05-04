@@ -17,8 +17,22 @@ object TimetableConfiguration {
     private var isLoaded = false
     private const val TAG = "TIMETABLE.Configuration"
     private const val fileName = "configuration.json"
+    // Because HashMap is a generic type, we need to define the type token manually.
+    private val jsonType = object : TypeToken<HashMap<Int, TimetableConfigurationData>>(){}.type
+
     var data = HashMap<Int, TimetableConfigurationData>()
-    val jsonType = object : TypeToken<HashMap<Int, TimetableConfigurationData>>(){}.type
+
+    private fun ensureLoaded(context: Context): HashMap<Int, TimetableConfigurationData> {
+        val caller = Thread.currentThread().stackTrace[3].let {
+            "${it.className}::${it.methodName}"
+        }
+        Log.d(TAG, "Configuration loading initiated by $caller...")
+        if (!isLoaded) {
+            loadFromFile(context)
+            Log.d(TAG, "Configuration loaded.")
+        } else Log.d(TAG, "Configuration was already loaded.")
+        return data
+    }
 
     private fun loadFromFile(context: Context): HashMap<Int, TimetableConfigurationData> {
         val file = File(context.filesDir.path).resolve(fileName)
@@ -66,18 +80,6 @@ object TimetableConfiguration {
             Log.d(TAG, "Configuration:$newLine\t$json")
         }
         Log.d(TAG, "Configuration file was saved.")
-        return data
-    }
-
-    fun ensureLoaded(context: Context): HashMap<Int, TimetableConfigurationData> {
-        val caller = Thread.currentThread().stackTrace[3].let {
-            "${it.className}::${it.methodName}"
-        }
-        Log.d(TAG, "Configuration loading initiated by $caller...")
-        if (!isLoaded) {
-            loadFromFile(context)
-            Log.d(TAG, "Configuration loaded.")
-        } else Log.d(TAG, "Configuration was already loaded.")
         return data
     }
 }
