@@ -1,5 +1,6 @@
 package com.example.aikataulu
 
+import android.app.NotificationManager
 import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
@@ -9,9 +10,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.models.Departure
 import com.example.aikataulu.models.Timetable
+import com.example.aikataulu.ui.MainActivity
 import com.google.gson.Gson
 import java.util.*
 import kotlin.collections.HashMap
@@ -63,8 +66,7 @@ class TimetableService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Received onStartCommand with intent name ${intent?.action}")
-        val widgetManager = AppWidgetManager.getInstance(applicationContext)
-        val widgetIds = widgetManager.getAppWidgetIds(ComponentName(application.packageName, TimetableWidgetProvider::class.qualifiedName!!))
+        val widgetIds = TimetableWidgetProvider.getExistingWidgetIds(applicationContext)
         TimetableConfiguration.cleanConfigFile(applicationContext, widgetIds)
         val configs = TimetableConfiguration.loadConfigForWidgets(applicationContext, widgetIds)
         configs.forEach {
@@ -73,6 +75,15 @@ class TimetableService : Service() {
             ensureTimedTaskCanceled(widgetId)
             setAutoUpdate(widgetId, config.autoUpdate)
         }
+
+        val builder = NotificationCompat
+            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
+            .setSmallIcon(R.mipmap.icon)
+            .setContentTitle("Timetable")
+            .setContentText("Service was created.")
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+
+        startForeground(944, builder.build())
 
         return super.onStartCommand(intent, flags, startId)
     }

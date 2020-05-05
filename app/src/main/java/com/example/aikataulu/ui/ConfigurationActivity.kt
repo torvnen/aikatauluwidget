@@ -46,23 +46,17 @@ class ConfigurationActivity : AppCompatActivity() {
             TimetableConfiguration.data[wId] = config
             // Save to disk
             TimetableConfiguration.saveToFile(applicationContext)
-            // Notify Service by invoking its Start method
-            val serviceIntent = Intent(applicationContext, TimetableService::class.java)
-            serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
-            applicationContext.startService(serviceIntent)
-
-            // Set result of activity
-            val resultValue = Intent().apply {
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
-            }
-            setResult(Activity.RESULT_OK, resultValue)
+            // Notify Widget Provider of config changes
+            // Send empty bundle (for now), the config will be read via other methods
+            AppWidgetManager.getInstance(applicationContext).updateAppWidgetOptions(wId, Bundle())
 
             // Close main activity
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             intent.putExtra("Exit", true)
             startActivity(intent)
-            // Finish activity
+            // Set result of activity and finish
+            setResult(Activity.RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId))
             finish()
         }
     }
