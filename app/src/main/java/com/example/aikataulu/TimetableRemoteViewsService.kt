@@ -22,8 +22,6 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         return ViewFactory(applicationContext, intent!!)
     }
     class ViewFactory(private val _context: Context, private val _intent: Intent) : RemoteViewsService.RemoteViewsFactory {
-        private var _stopId: String? = null
-        private var _widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
         private var _cursor: Cursor? = null
 
         companion object {
@@ -31,10 +29,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         }
 
         override fun onCreate() {
-            _widgetId = _intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-            Log.i(TAG, "Created RemoteViewsFactory for widget (id=$_widgetId)")
-//            val departuresJson = intent.getStringExtra(TimetableWidgetProvider.EXTRA_DEPARTURES)
-//            departures = Gson().fromJson(departuresJson, TimetableWidgetProvider.departuresJsonType)
+            Log.d(TAG, "Created RemoteViewsFactory")
         }
 
         override fun getLoadingView(): RemoteViews? {
@@ -64,10 +59,6 @@ class TimetableRemoteViewsService : RemoteViewsService() {
             if (position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
                 return null
             }
-//            val x: View = LayoutInflater.from(_context).inflate(R.layout.single_departure, null) // TODO avoid passing null
-//                .apply {
-//                    findViewById<TextView>(R.id.sd_tvRouteName).text = "_TEST_"
-//                }
             return RemoteViews(_context.packageName, R.layout.single_departure).apply {
                 setTextViewText(R.id.sd_tvRouteName, "TEST")
             }

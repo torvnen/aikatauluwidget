@@ -64,10 +64,21 @@ object TimetableConfiguration {
         return data
     }
 
+    fun cleanConfigFile(context: Context, remainingWidgetIds: IntArray) {
+        data = HashMap(data.filter {
+            remainingWidgetIds.contains(it.key)
+        })
+        saveToFile(context)
+    }
+
     fun loadConfigForWidget(context: Context, widgetId: Int): TimetableConfigurationData {
         Log.d(TAG, "Loading config for widget id $widgetId")
         return ensureLoaded(context) // Load persisted config
             .getOrElse(widgetId, { TimetableConfigurationData() }) // Fallback to default values
+    }
+
+    fun loadConfigForWidgets(context: Context, widgetIds: IntArray): HashMap<Int, TimetableConfigurationData> {
+        return HashMap(ensureLoaded(context).filter { widgetIds.contains(it.key) })
     }
 
     fun saveToFile(context: Context): HashMap<Int, TimetableConfigurationData> {

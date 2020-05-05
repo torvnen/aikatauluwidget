@@ -1,20 +1,17 @@
 package com.example.aikataulu
 
-import android.app.NotificationManager
 import android.app.Service
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
+import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import android.widget.RemoteViews
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.models.Departure
 import com.example.aikataulu.models.Timetable
-import com.example.aikataulu.ui.MainActivity
 import com.google.gson.Gson
 import java.util.*
 import kotlin.collections.HashMap
@@ -25,9 +22,6 @@ class TimetableService : Service() {
 
     companion object {
         private const val TAG = "TIMETABLE.Service"
-        const val ACTION_SETTINGS_CHANGED = "ACTION_SETTINGS_CHANGED"
-        const val creationNotificationId = 12559999
-        const val destructionNotificationId = 12559998
     }
 
     private fun ensureTimedTaskCanceled(widgetId: Int) {
@@ -44,9 +38,8 @@ class TimetableService : Service() {
                 val stop = stops.first()
                 _timerTasks[widgetId] = object: TimerTask() {
                     override fun run() {
-                        Log.d(TAG, "Fetching data for stop ${stop.name} (${stop.hrtId})...")
                         val departures = Api.getDeparturesForStopId(stop.hrtId).map { Departure(it) }
-                        Log.d(TAG, "Received ${departures.count()} departures")
+                        Log.d(TAG, "Received ${departures.count()} departures for stop ${stop.name} (${stop.hrtId})")
 
                         // Update content
                         applicationContext.contentResolver.update(TimetableDataProvider.CONTENT_URI,
@@ -55,7 +48,7 @@ class TimetableService : Service() {
                             emptyArray<String>()
                         )
                         // Notify WidgetProvider of the changes
-                        TimetableWidgetProvider.sendUpdateWidgetBroadcast(applicationContext, widgetId, departures)
+                        TimetableWidgetProvider.sendUpdateWidgetBroadcast(applicationContext, widgetId)
                     }
                 }
                 _timers[widgetId] = Timer()
@@ -64,61 +57,34 @@ class TimetableService : Service() {
         }
     }
 
-    fun setWidgetText(widgetId: Int, text: CharSequence) {
-        val remoteViews = RemoteViews(this.applicationContext.packageName, R.layout.widget)
-        val appWidgetManager = AppWidgetManager.getInstance(this.applicationContext)
-        remoteViews.setTextViewText(R.id.widgetTextView, text)
-        appWidgetManager.updateAppWidget(widgetId, remoteViews)
-    }
-
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
-    override fun onCreate() {
-        Log.i(TAG, "Creating service...")
-        super.onCreate()
-
-        val builder = NotificationCompat
-            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
-            .setSmallIcon(R.mipmap.icon)
-            .setContentTitle("Timetable")
-            .setContentText("Service was created.")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-
-        startForeground(creationNotificationId, builder.build())
-        Log.i(TAG, "Service was created.")
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(TAG, "Received onStartCommand with intent name ${intent?.action}")
-        val widgetId = intent?.extras?.getInt(
-            AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APPWIDGET_ID
-        ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        ensureTimedTaskCanceled(widgetId)
-        val config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId)
-        setAutoUpdate(widgetId, config.autoUpdate)
+        val widgetManager = AppWidgetManager.getInstance(applicationContext)
+        val widgetIds = widgetManager.getAppWidgetIds(ComponentName(application.packageName, TimetableWidgetProvider::class.qualifiedName!!))
+        TimetableConfiguration.cleanConfigFile(applicationContext, widgetIds)
+        val configs = TimetableConfiguration.loadConfigForWidgets(applicationContext, widgetIds)
+        configs.forEach {
+            val widgetId = it.key
+            val config = it.value
+            ensureTimedTaskCanceled(widgetId)
+            setAutoUpdate(widgetId, config.autoUpdate)
+        }
 
         return super.onStartCommand(intent, flags, startId)
     }
 
-    override fun stopService(name: Intent?): Boolean {
-        val builder = NotificationCompat
-            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
-            .setSmallIcon(R.mipmap.icon)
-            .setContentTitle("Timetable")
-            .setContentText("Service was stopped.")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-        with(NotificationManagerCompat.from(this)) {
-            notify(destructionNotificationId, builder.build())
-        }
-        return super.stopService(name)
+    override fun onCreate() {
+        Log.d(TAG, "onCreate()")
+        super.onCreate()
     }
 
     override fun onDestroy() {
         _timerTasks.forEach { it.value.cancel() }
-        Log.i(TAG, "onDestroy()")
+        Log.d(TAG, "onDestroy()")
         super.onDestroy()
     }
 }

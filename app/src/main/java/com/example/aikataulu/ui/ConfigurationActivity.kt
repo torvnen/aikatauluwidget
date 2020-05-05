@@ -49,20 +49,13 @@ class ConfigurationActivity : AppCompatActivity() {
             // Notify Service by invoking its Start method
             val serviceIntent = Intent(applicationContext, TimetableService::class.java)
             serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
-            applicationContext.startForegroundService(serviceIntent)
+            applicationContext.startService(serviceIntent)
 
             // Set result of activity
             val resultValue = Intent().apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
             }
             setResult(Activity.RESULT_OK, resultValue)
-
-//            // Notify Widgets of update
-//            AppWidgetManager.getInstance(this).apply {
-//                updateAppWidget(wId, RemoteViews(application.packageName, R.layout.widget).apply {
-//                    setRemoteAdapter(R.id.widget_content_target, Intent(applicationContext, TimetableService::class.java))
-//                })
-//            }
 
             // Close main activity
             val intent = Intent(this, MainActivity::class.java)
