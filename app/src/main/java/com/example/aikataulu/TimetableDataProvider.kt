@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.util.Log
 import com.example.aikataulu.models.Timetable
 import com.google.gson.Gson
 
@@ -14,7 +15,8 @@ class TimetableDataProvider : ContentProvider() {
 
     companion object {
         const val COLUMN_TIMETABLE = "TIMETABLE"
-        val CONTENT_URI = Uri.parse("content://com.example.aikataulu.data_provider")
+        const val TAG = "TIMETABLE.DataProvider"
+        val CONTENT_URI: Uri = Uri.parse("content://com.example.android.aikataulu.data_provider")
     }
 
     override fun query(
@@ -24,6 +26,7 @@ class TimetableDataProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
+        Log.d(TAG, "Received query with selection $selection")
         // Return whole data set if selection is null.
         val data = if (selection == null) _data else _data.filter { it.stop.hrtId == selection }
         return MatrixCursor(Timetable.allColumns).apply {
@@ -48,6 +51,7 @@ class TimetableDataProvider : ContentProvider() {
         val stopId = selection!!
         val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
         val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
+        Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
 
         _data.removeIf {
             it.stop.hrtId == stopId

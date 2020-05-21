@@ -46,18 +46,18 @@ class TimetableWidgetProvider : AppWidgetProvider() {
             AppWidgetManager.getInstance(context)
                 .updateAppWidget(widgetId, RemoteViews(context.packageName, R.layout.widget)
                     .apply {
-                        setOnClickPendingIntent(R.id.btn_configureWidget,
-                            Intent(context, ConfigurationActivity::class.java)
-                                .let { intent ->
-                                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-                                    intent.action = "configure_widget-$widgetId"
-                                    PendingIntent.getActivity(
-                                        context,
-                                        0,
-                                        intent,
-                                        PendingIntent.FLAG_UPDATE_CURRENT
-                                    )
-                                })
+//                        setOnClickPendingIntent(R.id.btn_configureWidget,
+//                            Intent(context, ConfigurationActivity::class.java)
+//                                .let { intent ->
+//                                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+//                                    intent.action = "configure_widget-$widgetId"
+//                                    PendingIntent.getActivity(
+//                                        context,
+//                                        0,
+//                                        intent,
+//                                        PendingIntent.FLAG_UPDATE_CURRENT
+//                                    )
+//                                })
                     })
         }
         super.onEnabled(context)
@@ -79,6 +79,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
         if (intent?.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
             if (widgetId != -1) {
+                Log.i(TAG, "Updating app widget (id=$widgetId)")
                 AppWidgetManager.getInstance(context).apply {
                     updateAppWidget(
                         widgetId,
@@ -92,7 +93,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                     notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)
                 }
             }
-            else Log.w(TAG, "Widget ID not defined when ACTION_APPWIDGET_UPDATE was invoked.")
+            else Log.w(TAG, "Widget ID not defined when ACTION_APPWIDGET_UPDATE was invoked. ComponentName: ${intent.component?.className}")
         }
         super.onReceive(context, intent)
     }

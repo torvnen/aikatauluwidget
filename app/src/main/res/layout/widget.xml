@@ -22,19 +22,19 @@
                     android:layout_height="wrap_content"
                     android:text="@string/widget_placeholder" />
 
-                <Space
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
+<!--                <Space-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1" />-->
 
-                <ImageView
-                    android:id="@+id/btn_configureWidget"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="center_vertical"
-                    android:src="@mipmap/baseline_settings_black_24dp" />
+<!--                <ImageView-->
+<!--                    android:id="@+id/btn_configureWidget"-->
+<!--                    android:clickable="true"-->
+<!--                    android:focusable="true"-->
+<!--                    android:layout_width="28dp"-->
+<!--                    android:layout_height="28dp"-->
+<!--                    android:layout_gravity="center_vertical"-->
+<!--                    android:src="@mipmap/baseline_settings_black_24dp" />-->
         </LinearLayout>
 
         <ListView
