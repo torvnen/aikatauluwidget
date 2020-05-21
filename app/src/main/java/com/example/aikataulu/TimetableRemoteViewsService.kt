@@ -49,8 +49,15 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         override fun onDataSetChanged() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
-            // https://www.sitepoint.com/killer-way-to-show-a-list-of-items-in-android-collection-widget/
             _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, _widgetId.toString(), null, null)
+            // Set the widget title
+            if (_cursor?.moveToFirst() == true && _widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                val stopName = _cursor!!.getString(_cursor!!.getColumnIndex(Timetable.COLUMN_STOPNAME))
+                AppWidgetManager.getInstance(_context)
+                    .updateAppWidget(_widgetId, RemoteViews(_context.packageName, R.layout.widget).apply {
+                        setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
+                    })
+            }
         }
 
         override fun hasStableIds(): Boolean {
@@ -63,10 +70,9 @@ class TimetableRemoteViewsService : RemoteViewsService() {
             if (_widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
                 return null
             }
-            //STOPNAME, ROUTE_SHORT_NAME, HEADSIGN, DEPARTURE_SCHEDULED, DEPARTURE_REALTIME, IS_ON_TIME
+
             val cursor = _cursor!!
             val colIdx = object {
-                val stopName = cursor.getColumnIndex(Timetable.COLUMN_STOPNAME)
                 val routeShortName = cursor.getColumnIndex(Timetable.COLUMN_ROUTE_SHORT_NAME)
                 val headsign = cursor.getColumnIndex(Timetable.COLUMN_HEADSIGN)
                 val departureScheduled = cursor.getColumnIndex(Timetable.COLUMN_DEPARTURE_SCHEDULED)
