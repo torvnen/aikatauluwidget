@@ -28,7 +28,7 @@ class TimetableDataProvider : ContentProvider() {
     ): Cursor? {
         Log.d(TAG, "Received query with selection $selection")
         // Return whole data set if selection is null.
-        val data = if (selection == null) _data else _data.filter { it.stop.hrtId == selection }
+        val data = if (selection == null) _data else _data.filter { it.widgetId.toString() == selection }
         return MatrixCursor(Timetable.allColumns).apply {
             data.forEach {
                 it.toMatrixRows().forEach {row ->

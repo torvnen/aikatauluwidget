@@ -2,7 +2,7 @@ package com.example.aikataulu.models
 
 import android.database.MatrixCursor
 
-class Timetable(val stop: Stop, val departures: List<Departure>) {
+class Timetable(val widgetId: Int, val stop: Stop, val departures: List<Departure>) {
     companion object {
         const val COLUMN_STOPNAME = "STOPNAME"
         const val COLUMN_DEPARTURE_SCHEDULED = "DEPARTURE_SCHEDULED"

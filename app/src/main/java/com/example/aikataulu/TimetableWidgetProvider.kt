@@ -88,6 +88,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                             setRemoteAdapter(
                                 R.id.widget_content_target,
                                 Intent(context, TimetableRemoteViewsService::class.java)
+                                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                             )
                         })
                     notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)

@@ -5,12 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
 import android.widget.AdapterView
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
-import android.widget.TextView
+import com.example.aikataulu.models.Timetable
 
 // https://android.googlesource.com/platform/development/+/master/samples/WeatherListWidget/src/com/example/android/weatherlistwidget/WeatherWidgetService.java
 class TimetableRemoteViewsService : RemoteViewsService() {
@@ -23,13 +21,18 @@ class TimetableRemoteViewsService : RemoteViewsService() {
     }
     class ViewFactory(private val _context: Context, private val _intent: Intent) : RemoteViewsService.RemoteViewsFactory {
         private var _cursor: Cursor? = null
+        private var _widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
 
         companion object {
             const val EXTRA_STOP_ID = "EXTRA_STOP_ID"
         }
 
+        init {
+            _widgetId = _intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        }
+
         override fun onCreate() {
-            Log.d(TAG, "Created RemoteViewsFactory")
+            Log.d(TAG, "Created RemoteViewsFactory. Intent.action=${_intent.action}, WidgetId=$_widgetId")
         }
 
         override fun getLoadingView(): RemoteViews? {
@@ -47,7 +50,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
             // https://www.sitepoint.com/killer-way-to-show-a-list-of-items-in-android-collection-widget/
-            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, null, null, null)
+            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, _widgetId.toString(), null, null)
         }
 
         override fun hasStableIds(): Boolean {
@@ -56,11 +59,27 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         }
 
         override fun getViewAt(position: Int): RemoteViews? {
-            if (position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
+            Log.d(TAG, "getViewAt()")
+            if (_widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
                 return null
             }
+            //STOPNAME, ROUTE_SHORT_NAME, HEADSIGN, DEPARTURE_SCHEDULED, DEPARTURE_REALTIME, IS_ON_TIME
+            val cursor = _cursor!!
+            val colIdx = object {
+                val stopName = cursor.getColumnIndex(Timetable.COLUMN_STOPNAME)
+                val routeShortName = cursor.getColumnIndex(Timetable.COLUMN_ROUTE_SHORT_NAME)
+                val headsign = cursor.getColumnIndex(Timetable.COLUMN_HEADSIGN)
+                val departureScheduled = cursor.getColumnIndex(Timetable.COLUMN_DEPARTURE_SCHEDULED)
+                val departureRealtime = cursor.getColumnIndex(Timetable.COLUMN_DEPARTURE_REALTIME)
+                val isOnTime = cursor.getColumnIndex(Timetable.COLUMN_IS_ON_TIME)
+            }
+
             return RemoteViews(_context.packageName, R.layout.single_departure).apply {
-                setTextViewText(R.id.sd_tvRouteName, "TEST")
+                setTextViewText(R.id.sd_tvRouteName, cursor.getString(colIdx.routeShortName))
+                setTextViewText(R.id.sd_tvHeadsign, cursor.getString(colIdx.headsign))
+                setTextViewText(R.id.sd_tvDepartureScheduled, cursor.getString(colIdx.departureScheduled))
+                val isOnTime = "true".equals(cursor.getString(colIdx.isOnTime), true)
+                setTextViewText(R.id.sd_tvDepartureRealtime, if (isOnTime) "" else " (${cursor.getString(colIdx.departureRealtime)})")
             }
         }
 

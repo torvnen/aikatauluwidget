@@ -2,6 +2,7 @@ package com.example.aikataulu.ui
 
 import android.app.*
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -47,6 +48,12 @@ class MainActivity : AppCompatActivity() {
             notificationChannelId(
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             )
+        val widgetIds = TimetableWidgetProvider.getExistingWidgetIds(applicationContext)
+        if (widgetIds.isNotEmpty()) {
+            applicationContext.startForegroundService(Intent(applicationContext, TimetableService::class.java))
+            widgetIds.forEach { TimetableWidgetProvider.sendUpdateWidgetBroadcast(applicationContext, it) }
+        }
+
     }
 
 }

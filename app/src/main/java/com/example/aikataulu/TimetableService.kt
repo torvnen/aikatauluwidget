@@ -35,6 +35,7 @@ class TimetableService : Service() {
         ensureTimedTaskCanceled(widgetId)
         val config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId)
         val stopName = config.stopName
+        Log.i(TAG, "${if (b) "Starting" else "Stopping"} auto-updating widgetId=$widgetId stopName=$stopName")
         if (b && stopName != null) {
             val stops = Api.getStopsContainingText(stopName)
             if (stops.any()) {
@@ -46,7 +47,7 @@ class TimetableService : Service() {
 
                         // Update content
                         applicationContext.contentResolver.update(TimetableDataProvider.CONTENT_URI,
-                            ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(stop, departures))) },
+                            ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(widgetId, stop, departures))) },
                             stop.hrtId,
                             emptyArray<String>()
                         )
@@ -69,6 +70,7 @@ class TimetableService : Service() {
         val widgetIds = TimetableWidgetProvider.getExistingWidgetIds(applicationContext)
         TimetableConfiguration.cleanConfigFile(applicationContext, widgetIds)
         val configs = TimetableConfiguration.loadConfigForWidgets(applicationContext, widgetIds)
+        Log.i(TAG, "Loaded ${configs.size} configs for ${widgetIds.size} widgets")
         configs.forEach {
             val widgetId = it.key
             val config = it.value
