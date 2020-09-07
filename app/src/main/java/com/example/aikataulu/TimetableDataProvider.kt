@@ -27,8 +27,8 @@ class TimetableDataProvider : ContentProvider() {
         sortOrder: String?
     ): Cursor? {
         Log.d(TAG, "Received query with selection $selection")
-        // Return whole data set if selection is null.
-        val data = if (selection == null) _data else _data.filter { it.widgetId.toString() == selection }
+        // Return out-of-date data sets if selection is null.
+        val data = if (selection == null) _data.filter { !it.isViewUpdated } else _data.filter { it.widgetId.toString() == selection }
         return MatrixCursor(Timetable.allColumns).apply {
             data.forEach {
                 it.toMatrixRows().forEach {row ->
@@ -51,6 +51,7 @@ class TimetableDataProvider : ContentProvider() {
         val stopId = selection!!
         val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
         val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
+        timetable.isViewUpdated = false
         Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
 
         _data.removeIf {
