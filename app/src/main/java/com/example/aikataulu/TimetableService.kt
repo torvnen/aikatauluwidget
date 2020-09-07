@@ -2,9 +2,6 @@ package com.example.aikataulu
 
 import android.app.NotificationManager
 import android.app.Service
-import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProviderInfo
-import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -39,11 +36,13 @@ class TimetableService : Service() {
         if (b && stopName != null) {
             val stops = Api.getStopsContainingText(stopName)
             if (stops.any()) {
+                Log.i(TAG, "Found ${stops.count()} stops. Choosing the first one.")
                 val stop = stops.first()
+                Log.i(TAG, "Chose the stop ${stop.hrtId} (${stop.name})")
                 _timerTasks[widgetId] = object: TimerTask() {
                     override fun run() {
                         val departures = Api.getDeparturesForStopId(stop.hrtId).map { Departure(it) }
-                        Log.d(TAG, "Received ${departures.count()} departures for stop ${stop.name} (${stop.hrtId})")
+                        Log.d(TAG, "[WidgetId=$widgetId]: Received ${departures.count()} departures for stop ${stop.name} (${stop.hrtId})")
 
                         // Update content
                         applicationContext.contentResolver.update(TimetableDataProvider.CONTENT_URI,
@@ -57,7 +56,7 @@ class TimetableService : Service() {
                 }
                 _timers[widgetId] = Timer()
                 _timers[widgetId]!!.scheduleAtFixedRate(_timerTasks[widgetId], 0, (1000 * config.updateIntervalS).toLong())
-            }
+            } else Log.w(TAG, "Found no stops containing text \"$stopName\"")
         }
     }
 
@@ -78,14 +77,20 @@ class TimetableService : Service() {
             setAutoUpdate(widgetId, config.autoUpdate)
         }
 
-        val builder = NotificationCompat
-            .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
-            .setSmallIcon(R.mipmap.icon)
-            .setContentTitle("Timetable")
-            .setContentText("Service was created.")
-            .setPriority(NotificationCompat.PRIORITY_MIN)
+        Log.d("TIMETABLE", "Creating notification builder...")
 
+        val builder = NotificationCompat
+                .Builder(this, MainActivity.notificationChannelId(getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager))
+                .setSmallIcon(R.mipmap.icon)
+                .setContentTitle("Timetable")
+                .setContentText("Service was created.")
+                .setPriority(NotificationCompat.PRIORITY_MIN)
+
+        Log.d("TIMETABLE", "Notification builder created.")
+
+        Log.d("TIMETABLE", "Starting foreground service...")
         startForeground(944, builder.build())
+        Log.d("TIMETABLE", "Foreground service started.")
 
         return super.onStartCommand(intent, flags, startId)
     }
