@@ -32,22 +32,23 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         }
 
         override fun getItemId(position: Int): Long {
-            Log.i(TAG, "getItemId($position)")
-//            return if (_cursor?.moveToPosition(position) == true) _cursor!!.getLong(0) else position.toLong()
             return position.toLong()
         }
 
         override fun onDataSetChanged() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
-            // Get all data for widgets that have not updated
+            // Get all data for widgets that have out-of-date data
             _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, null, null, null)
-            // Set the widget title
-            if (_cursor?.moveToFirst() == true) {
-                val stopName = _cursor!!.getString(_cursor!!.getColumnIndex(Timetable.COLUMN_STOPNAME))
-                val widgetId = _cursor!!.getInt(_cursor!!.getColumnIndex(Timetable.WIDGET_ID))
+            while (_cursor?.moveToNext() == true) {
+                val cursor = _cursor!!
+                // This data set has changed.
+                val widgetId = cursor.getInt(cursor.getColumnIndex(Timetable.WIDGET_ID))
                 AppWidgetManager.getInstance(_context)
                     .updateAppWidget(widgetId, RemoteViews(_context.packageName, R.layout.widget).apply {
+                        // Do manual updating here, the adapter will handle the list creation.
+                        // Set the widget title
+                        val stopName = cursor.getString(cursor.getColumnIndex(Timetable.COLUMN_STOPNAME))
                         setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
                     })
             }
@@ -59,7 +60,6 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         }
 
         override fun getViewAt(position: Int): RemoteViews? {
-            Log.d(TAG, "getViewAt()")
             if (position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
                 return null
             }
