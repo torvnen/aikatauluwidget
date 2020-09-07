@@ -1,21 +1,14 @@
 package com.example.aikataulu;
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
-import androidx.core.content.ContextCompat
-import com.example.aikataulu.models.Departure
-import com.example.aikataulu.ui.ConfigurationActivity
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.lang.reflect.Type
 
 class TimetableWidgetProvider : AppWidgetProvider() {
     companion object {
@@ -23,6 +16,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
 
         // Send data to be handled by ViewFactory
         fun sendUpdateWidgetBroadcast(context: Context, widgetId: Int) {
+            Log.d(TAG, "[WidgetId=$widgetId]: Broadcasting ACTION_APPWIDGET_UPDATE.")
             context.sendBroadcast(Intent(context, TimetableWidgetProvider::class.java)
                 .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
@@ -39,7 +33,9 @@ class TimetableWidgetProvider : AppWidgetProvider() {
     override fun onEnabled(context: Context?) {
         Log.d(TAG, "onEnabled()")
         // Start service when a widget has been added
-        context!!.startForegroundService(Intent(context, TimetableService::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context!!.startForegroundService(Intent(context, TimetableService::class.java))
+        } else throw Exception("TIMETABLE: SDK Level too low. Cannot start foreground service.")
         // Perform this loop procedure for each App Widget that belongs to this provider
         getExistingWidgetIds(context).forEach { widgetId ->
             Log.i(TAG, "Attaching click handler to widget id $widgetId")
@@ -70,7 +66,9 @@ class TimetableWidgetProvider : AppWidgetProvider() {
         newOptions: Bundle?
     ) {
         // Invoke start method of Service - it will handle all required actions to update widgets.
-        context!!.startForegroundService(Intent(context, TimetableService::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context!!.startForegroundService(Intent(context, TimetableService::class.java))
+        } else throw Exception("TIMETABLE: SDK Level too low. Cannot start foreground service.")
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
     }
 
@@ -79,18 +77,14 @@ class TimetableWidgetProvider : AppWidgetProvider() {
         if (intent?.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
             if (widgetId != -1) {
-                Log.i(TAG, "Updating app widget (id=$widgetId)")
+                Log.i(TAG, "[WidgetId=$widgetId]: Notifying data as changed.")
                 AppWidgetManager.getInstance(context).apply {
-                    updateAppWidget(
-                        widgetId,
-                        RemoteViews(context!!.packageName, R.layout.widget).apply {
-                            // TODO Optimization: check if remote adapter could be set in onEnabled()
-                            setRemoteAdapter(
-                                R.id.widget_content_target,
-                                Intent(context, TimetableRemoteViewsService::class.java)
-                                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-                            )
-                        })
+                    // Set the RemoteViews for Widgets to have a view adapter
+                    // Remember to also call updateAppWidget, the RemoteViews will not apply itself.
+                    updateAppWidget(widgetId, RemoteViews(context!!.packageName, R.layout.widget).apply {
+                        setRemoteAdapter(R.id.widget_content_target, Intent(context!!, TimetableRemoteViewsService::class.java))
+                    })
+
                     notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)
                 }
             }
