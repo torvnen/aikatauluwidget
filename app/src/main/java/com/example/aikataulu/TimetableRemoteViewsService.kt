@@ -21,18 +21,9 @@ class TimetableRemoteViewsService : RemoteViewsService() {
     }
     class ViewFactory(private val _context: Context, private val _intent: Intent) : RemoteViewsService.RemoteViewsFactory {
         private var _cursor: Cursor? = null
-        private var _widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
-
-        companion object {
-            const val EXTRA_STOP_ID = "EXTRA_STOP_ID"
-        }
-
-        init {
-            _widgetId = _intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-        }
 
         override fun onCreate() {
-            Log.d(TAG, "Created RemoteViewsFactory. Intent.action=${_intent.action}, WidgetId=$_widgetId")
+            Log.d(TAG, "Created RemoteViewsFactory. Intent.action=${_intent.action}")
         }
 
         override fun getLoadingView(): RemoteViews? {
@@ -49,12 +40,14 @@ class TimetableRemoteViewsService : RemoteViewsService() {
         override fun onDataSetChanged() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
-            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, _widgetId.toString(), null, null)
+            // Get all data for widgets that have not updated
+            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, null, null, null)
             // Set the widget title
-            if (_cursor?.moveToFirst() == true && _widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            if (_cursor?.moveToFirst() == true) {
                 val stopName = _cursor!!.getString(_cursor!!.getColumnIndex(Timetable.COLUMN_STOPNAME))
+                val widgetId = _cursor!!.getInt(_cursor!!.getColumnIndex(Timetable.WIDGET_ID))
                 AppWidgetManager.getInstance(_context)
-                    .updateAppWidget(_widgetId, RemoteViews(_context.packageName, R.layout.widget).apply {
+                    .updateAppWidget(widgetId, RemoteViews(_context.packageName, R.layout.widget).apply {
                         setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
                     })
             }
@@ -67,7 +60,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
 
         override fun getViewAt(position: Int): RemoteViews? {
             Log.d(TAG, "getViewAt()")
-            if (_widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
+            if (position == AdapterView.INVALID_POSITION || _cursor?.moveToPosition(position) != true) {
                 return null
             }
 
