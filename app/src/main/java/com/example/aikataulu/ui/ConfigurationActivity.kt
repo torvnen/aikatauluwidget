@@ -4,14 +4,20 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.service.autofill.OnClickAction
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.example.aikataulu.*
 
 class ConfigurationActivity : AppCompatActivity() {
+    private lateinit var intervalDialog: IntervalDialog
     private val TAG = "TIMETABLE.ConfigurationActivity"
     var widgetId: Int? = null
     lateinit var config: TimetableConfigurationData
@@ -70,6 +76,23 @@ class ConfigurationActivity : AppCompatActivity() {
         stopName.setText(config.stopName)
         updateInterval.setText(config.updateIntervalS.toString())
     }
+    fun updateInterval(seconds: Int) {
+        config.updateIntervalS = seconds
+        populateConfigurationList(config)
+    }
+    fun onIntervalRadioButtonClicked(view: View) {
+        if (view is RadioButton) {
+            when (view.id) {
+                R.id.interval_10s -> updateInterval(10)
+                R.id.interval_30s -> updateInterval(30)
+                R.id.interval_1m -> updateInterval(60)
+                R.id.interval_5m -> updateInterval(300)
+                R.id.interval_15m -> updateInterval(900)
+                R.id.interval_30m -> updateInterval(1800)
+            }
+            intervalDialog.closeDialog()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +106,40 @@ class ConfigurationActivity : AppCompatActivity() {
         config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId!!)
         attachEventHandlers()
         loadUiState()
+        populateConfigurationList(config)
     }
+    /* BEGIN List-style element population */
 
+    fun populateConfigurationList(currentConfig: TimetableConfigurationData) {
+        val configurationList = findViewById<LinearLayout>(R.id.configurationList)
+        configurationList.removeAllViews()
+        fun createConfigurationItem(itemName: String, value: String?, onClick: () -> Unit, iconAsset: String? = null): View {
+            val item = layoutInflater.inflate(R.layout.configuration_item, configurationList).apply{
+                setOnClickListener {
+                    onClick()
+                }
+            }
+            // Icon
+            item.findViewById<ImageView>(R.id.configurationItemIcon).apply {
+                if (iconAsset == null) visibility = android.view.View.INVISIBLE
+            }
+            // Main label (configuration item name)
+            item.findViewById<TextView>(R.id.configItemName).apply { text = itemName }
+            // Current value
+            item.findViewById<TextView>(R.id.configItemValue).apply { text = value }
+            return item!!
+        }
+        createConfigurationItem("Stop", currentConfig.stopName, {
+            val transaction = supportFragmentManager.beginTransaction()
+            val stopDialog = StopDialog()
+        })
+        createConfigurationItem("Update interval", currentConfig.getUpdateIntervalText(), {
+            val transaction = supportFragmentManager.beginTransaction()
+            intervalDialog = IntervalDialog(widgetId!!)
+            transaction.add(intervalDialog, IntervalDialog.TAG)
+            transaction.commit()
+        })
+
+    }
+    /* END List-style element population */
 }

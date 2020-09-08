@@ -9,8 +9,16 @@ import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.lang.Exception
 import java.lang.IllegalStateException
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
-data class TimetableConfigurationData(var updateIntervalS: Int = 10, var stopName: String? = null, var autoUpdate: Boolean = false) { }
+data class TimetableConfigurationData(var updateIntervalS: Int = 10, var stopName: String? = null, var autoUpdate: Boolean = false) {
+    fun getUpdateIntervalText(): String {
+        val m = updateIntervalS / 60
+        val s = updateIntervalS % 60
+        return "Every${if (m > 0) " $m minutes" else ""}${if (s > 0) " $s seconds" else ""}"
+    }
+}
 
 // Persistent configuration object for the app.
 object TimetableConfiguration {

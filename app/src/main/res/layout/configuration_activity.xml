@@ -102,14 +102,13 @@
                     tools:layout_editor_absoluteX="10dp" />
             </LinearLayout>
 
-            <ListView
-                android:id="@+id/configuration_items"
+            <LinearLayout
+                android:id="@+id/configurationList"
                 android:layout_width="wrap_content"
                 android:layout_height="400dp"
                 android:divider="#fff"
                 android:dividerHeight="1dp"
-                android:orientation="vertical"
-                tools:listitem="@layout/configuration_item" />
+                android:orientation="vertical" />
 
         </LinearLayout>
 
