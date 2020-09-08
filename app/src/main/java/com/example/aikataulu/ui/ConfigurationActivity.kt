@@ -85,14 +85,6 @@ class ConfigurationActivity : AppCompatActivity() {
     }
 
     private fun updateInterval(seconds: Int) {
-        /*
-
-                        applicationContext.contentResolver.update(TimetableDataProvider.TIMETABLE_DATA_URI,
-                            ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(widgetId, stop, departures))) },
-                            stop.hrtId,
-                            emptyArray<String>()
-                        )
-         */
         applicationContext.contentResolver.update(TimetableDataProvider.CONFIGURATION_URI,
             ContentValues().apply {
                 put(
