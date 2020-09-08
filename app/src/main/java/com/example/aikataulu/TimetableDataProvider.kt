@@ -6,17 +6,27 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.util.Log
+import com.example.aikataulu.database.TimetableDbHelper
+import com.example.aikataulu.database.contracts.ConfigurationContract
 import com.example.aikataulu.models.Timetable
 import com.google.gson.Gson
 
 // https://developer.android.com/guide/topics/providers/content-provider-basics
 class TimetableDataProvider : ContentProvider() {
     private val _data = ArrayList<Timetable>()
+    private lateinit var dbHelper: TimetableDbHelper
 
     companion object {
         const val COLUMN_TIMETABLE = "TIMETABLE"
         const val TAG = "TIMETABLE.DataProvider"
-        val CONTENT_URI: Uri = Uri.parse("content://com.example.android.aikataulu.data_provider")
+        val TIMETABLE_DATA_URI: Uri = Uri.parse("content://com.example.android.aikataulu.data_provider")
+        val CONFIGURATION_URI: Uri =
+            Uri.parse("content://com.example.android.aikataulu.data_provider/configuration")
+    }
+
+    override fun onCreate(): Boolean {
+        dbHelper = TimetableDbHelper(context!!)
+        return true
     }
 
     override fun query(
@@ -27,19 +37,22 @@ class TimetableDataProvider : ContentProvider() {
         sortOrder: String?
     ): Cursor? {
         Log.d(TAG, "Received query with selection $selection")
-        // Return out-of-date data sets if selection is null.
-        val data = if (selection == null) _data.filter { !it.isViewUpdated } else _data.filter { it.widgetId.toString() == selection }
-        return MatrixCursor(Timetable.allColumns).apply {
-            data.forEach {
-                it.toMatrixRows().forEach {row ->
-                    addRow(row)
+        if (uri == TIMETABLE_DATA_URI) {
+            // Return out-of-date data sets
+            val data =
+                if (selection == null) _data.filter { !it.isViewUpdated } else _data.filter { it.widgetId.toString() == selection }
+            return MatrixCursor(Timetable.allColumns).apply {
+                data.forEach {
+                    it.toMatrixRows().forEach { row ->
+                        addRow(row)
+                    }
                 }
             }
+        } else if (uri == CONFIGURATION_URI) {
+            // TODO
+            val widgetId = selection
         }
-    }
-
-    override fun onCreate(): Boolean {
-        return true
+        return null
     }
 
     override fun update(
@@ -48,17 +61,29 @@ class TimetableDataProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        val stopId = selection!!
-        val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
-        val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
-        timetable.isViewUpdated = false
-        Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
+        if (uri == TIMETABLE_DATA_URI) {
+            val stopId = selection!!
+            val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
+            val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
+            timetable.isViewUpdated = false
+            Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
 
-        _data.removeIf {
-            it.stop.hrtId == stopId
+            _data.removeIf {
+                it.stop.hrtId == stopId
+            }
+            _data.add(timetable)
+
+        } else if (uri == CONFIGURATION_URI) {
+            if (selection != null && values != null) {
+                val widgetId = selection.toInt()
+                if (widgetId > 0) {
+                    val newInterval = values.getAsInteger(ConfigurationContract.ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS)
+                    if (newInterval != null) {
+                        dbHelper.updateInterval(widgetId, newInterval.toInt())
+                    }
+                }
+            } else return 0
         }
-        _data.add(timetable)
-
         context!!.contentResolver.notifyChange(uri, null)
         return 1
     }
@@ -74,6 +99,10 @@ class TimetableDataProvider : ContentProvider() {
     override fun getType(uri: Uri): String? {
         // Mime type "cursor.dir" implies a cursor for 0..n items
         // , the rest is for the returnee object type
-        return "vnd.android.cursor.dir/vnd.aikataulu.models.timetable"
+        when (uri) {
+            CONFIGURATION_URI -> return "vnd.android.cursor.dir/vnd.aikataulu.timetableconfigurationdata"
+            TIMETABLE_DATA_URI -> return "vnd.android.cursor.dir/vnd.aikataulu.models.timetable"
+        }
+        return null
     }
 }

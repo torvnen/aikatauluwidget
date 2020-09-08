@@ -45,7 +45,7 @@ class TimetableService : Service() {
                         Log.d(TAG, "[WidgetId=$widgetId]: Received ${departures.count()} departures for stop ${stop.name} (${stop.hrtId})")
 
                         // Update content
-                        applicationContext.contentResolver.update(TimetableDataProvider.CONTENT_URI,
+                        applicationContext.contentResolver.update(TimetableDataProvider.TIMETABLE_DATA_URI,
                             ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(widgetId, stop, departures))) },
                             stop.hrtId,
                             emptyArray<String>()

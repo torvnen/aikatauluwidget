@@ -39,7 +39,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
             Log.i(TAG, "onDataSetChanged()")
             _cursor?.close()
             // Get all data for widgets that have out-of-date data
-            _cursor = _context.contentResolver.query(TimetableDataProvider.CONTENT_URI, null, null, null, null)
+            _cursor = _context.contentResolver.query(TimetableDataProvider.TIMETABLE_DATA_URI, null, null, null, null)
             while (_cursor?.moveToNext() == true) {
                 val cursor = _cursor!!
                 // This data set has changed.

@@ -6,7 +6,7 @@ object ConfigurationContract {
     const val SQL_CREATE_ENTRIES =
         "CREATE TABLE ${ConfigurationEntry.TABLE_NAME} (" +
                 "${BaseColumns._ID} INTEGER PRIMARY KEY," +
-                "${ConfigurationEntry.COLUMN_NAME_WIDGET_ID} INTEGER," +
+                "${ConfigurationEntry.COLUMN_NAME_WIDGET_ID} INTEGER UNIQUE," +
                 "${ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS} INTEGER, " +
                 "${ConfigurationEntry.COLUMN_NAME_SELECTED_STOP_ID} INTEGER" +
                 "${ConfigurationEntry.COLUMN_NAME_AUTO_UPDATE_ENABLED} INTEGER)"

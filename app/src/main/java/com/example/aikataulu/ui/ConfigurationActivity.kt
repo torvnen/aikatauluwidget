@@ -2,7 +2,9 @@ package com.example.aikataulu.ui
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.ContentValues
 import android.content.Intent
+import android.database.Cursor
 import android.os.Bundle
 import android.service.autofill.OnClickAction
 import android.text.Editable
@@ -15,8 +17,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.example.aikataulu.*
+import com.example.aikataulu.database.contracts.ConfigurationContract
 
 class ConfigurationActivity : AppCompatActivity() {
+    private var _cursor: Cursor? = null
     private lateinit var intervalDialog: IntervalDialog
     private val TAG = "TIMETABLE.ConfigurationActivity"
     var widgetId: Int? = null
@@ -27,18 +31,18 @@ class ConfigurationActivity : AppCompatActivity() {
         val stopName = findViewById<EditText>(R.id.stopName)
         val autoUpdate = findViewById<Switch>(R.id.autoUpdate)
         val updateInterval = findViewById<EditText>(R.id.updateInterval)
-        updateInterval.addTextChangedListener(object: TextWatcher {
-            override fun afterTextChanged(s: Editable?) { }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+        updateInterval.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 // If string is not int-parseable, set default config value
                 config.updateIntervalS = s.toString().toIntOrNull()
                     ?: TimetableConfigurationData().updateIntervalS
             }
         })
-        stopName.addTextChangedListener(object: TextWatcher {
-            override fun afterTextChanged(s: Editable?) { }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+        stopName.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 config.stopName = s.toString()
             }
@@ -62,7 +66,10 @@ class ConfigurationActivity : AppCompatActivity() {
             intent.putExtra("Exit", true)
             startActivity(intent)
             // Set result of activity and finish
-            setResult(Activity.RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId))
+            setResult(
+                Activity.RESULT_OK,
+                Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
+            )
             finish()
         }
     }
@@ -76,10 +83,28 @@ class ConfigurationActivity : AppCompatActivity() {
         stopName.setText(config.stopName)
         updateInterval.setText(config.updateIntervalS.toString())
     }
-    fun updateInterval(seconds: Int) {
-        config.updateIntervalS = seconds
-        populateConfigurationList(config)
+
+    private fun updateInterval(seconds: Int) {
+        /*
+
+                        applicationContext.contentResolver.update(TimetableDataProvider.TIMETABLE_DATA_URI,
+                            ContentValues().apply{ put(TimetableDataProvider.COLUMN_TIMETABLE, Gson().toJson(Timetable(widgetId, stop, departures))) },
+                            stop.hrtId,
+                            emptyArray<String>()
+                        )
+         */
+        applicationContext.contentResolver.update(TimetableDataProvider.CONFIGURATION_URI,
+            ContentValues().apply {
+                put(
+                    ConfigurationContract.ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
+                    seconds
+                )
+            },
+            widgetId!!.toString(),
+            null
+        )
     }
+
     fun onIntervalRadioButtonClicked(view: View) {
         if (view is RadioButton) {
             when (view.id) {
@@ -113,12 +138,18 @@ class ConfigurationActivity : AppCompatActivity() {
     fun populateConfigurationList(currentConfig: TimetableConfigurationData) {
         val configurationList = findViewById<LinearLayout>(R.id.configurationList)
         configurationList.removeAllViews()
-        fun createConfigurationItem(itemName: String, value: String?, onClick: () -> Unit, iconAsset: String? = null): View {
-            val item = layoutInflater.inflate(R.layout.configuration_item, configurationList).apply{
-                setOnClickListener {
-                    onClick()
+        fun createConfigurationItem(
+            itemName: String,
+            value: String?,
+            onClick: () -> Unit,
+            iconAsset: String? = null
+        ): View {
+            val item =
+                layoutInflater.inflate(R.layout.configuration_item, configurationList).apply {
+                    setOnClickListener {
+                        onClick()
+                    }
                 }
-            }
             // Icon
             item.findViewById<ImageView>(R.id.configurationItemIcon).apply {
                 if (iconAsset == null) visibility = android.view.View.INVISIBLE

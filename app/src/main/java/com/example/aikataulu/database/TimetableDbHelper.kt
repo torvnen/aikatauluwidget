@@ -9,7 +9,7 @@ import com.example.aikataulu.database.contracts.StopContract
 class TimetableDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         // If you change the database schema, you must increment the database version.
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
         const val DATABASE_NAME = "aikataulu.db"
     }
     override fun onCreate(db: SQLiteDatabase) {
@@ -25,5 +25,9 @@ class TimetableDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
     }
     override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         onUpgrade(db, oldVersion, newVersion)
+    }
+    fun updateInterval(widgetId: Int, newInterval: Int) {
+        val entry = ConfigurationContract.ConfigurationEntry
+        writableDatabase.execSQL("UPDATE ${entry.TABLE_NAME} SET ${entry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS} = $newInterval WHERE ${entry.COLUMN_NAME_WIDGET_ID} = $widgetId")
     }
 }
