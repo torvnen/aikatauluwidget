@@ -25,12 +25,7 @@ import kotlin.collections.HashMap
 class TimetableService : Service() {
     private val _tasks = HashMap<Int, TimerTask>()
     private val _timers = HashMap<Int, Timer>()
-    private val _observer = ConfigurationObserver(applicationContext) { config ->
-        if (config != null) {
-            ensureTimedTaskCanceled(config.widgetId ?: 0)
-            updateTask(config)
-        }
-    }
+    private lateinit var _observer: ConfigurationObserver
 
     companion object {
         private const val TAG = "TIMETABLE.Service"
@@ -147,6 +142,12 @@ class TimetableService : Service() {
     }
 
     override fun onCreate() {
+        _observer = ConfigurationObserver(applicationContext) { config ->
+            if (config != null) {
+                ensureTimedTaskCanceled(config.widgetId ?: 0)
+                updateTask(config)
+            }
+        }
         applicationContext.contentResolver.registerContentObserver(
             TimetableDataProvider.CONFIGURATION_URI,
             true,

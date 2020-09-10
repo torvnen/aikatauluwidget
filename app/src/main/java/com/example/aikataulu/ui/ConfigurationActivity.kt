@@ -177,6 +177,8 @@ class ConfigurationActivity : AppCompatActivity() {
         configurationList.addView(createConfigurationItem("Stop", viewModel!!.stopId, {
             val transaction = supportFragmentManager.beginTransaction()
             val stopDialog = StopDialog()
+            transaction.add(stopDialog, StopDialog.TAG)
+            transaction.commit()
         }))
         configurationList.addView(
             createConfigurationItem(
