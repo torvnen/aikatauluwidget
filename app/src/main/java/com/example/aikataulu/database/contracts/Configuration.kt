@@ -8,7 +8,7 @@ object ConfigurationContract {
                 "${BaseColumns._ID} INTEGER PRIMARY KEY," +
                 "${ConfigurationEntry.COLUMN_NAME_WIDGET_ID} INTEGER UNIQUE," +
                 "${ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS} INTEGER, " +
-                "${ConfigurationEntry.COLUMN_NAME_SELECTED_STOP_ID} INTEGER" +
+                "${ConfigurationEntry.COLUMN_NAME_SELECTED_STOP_ID} INTEGER," +
                 "${ConfigurationEntry.COLUMN_NAME_AUTO_UPDATE_ENABLED} INTEGER)"
 
     const val SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS ${ConfigurationEntry.TABLE_NAME}"

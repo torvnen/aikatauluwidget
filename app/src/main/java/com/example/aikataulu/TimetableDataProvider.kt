@@ -53,16 +53,6 @@ class TimetableDataProvider : ContentProvider() {
         } else if (uri == CONFIGURATION_URI) {
             val widgetId = selection?.toInt() ?: 0
             return dbHelper.getConfigByWidgetId(widgetId)
-            /*
-            *
-        if (cursor != null && cursor.moveToFirst()) {
-            val updateIntervalS = cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS))
-            val stopId = cursor.getStringOrNull(cursor.getColumnIndex(entry.COLUMN_NAME_SELECTED_STOP_ID))
-            val isAutoUpdateEnabled = cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_AUTO_UPDATE_ENABLED)) == 1
-            return TimetableConfigurationData(updateIntervalS, stopId, isAutoUpdateEnabled)
-        }
-            *
-            * */
         } else if (uri == STOP_URI) {
 
         }
