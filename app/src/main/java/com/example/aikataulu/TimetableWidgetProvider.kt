@@ -1,5 +1,6 @@
 package com.example.aikataulu;
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -9,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
+import com.example.aikataulu.ui.ConfigurationActivity
 
 class TimetableWidgetProvider : AppWidgetProvider() {
     companion object {
@@ -42,18 +44,18 @@ class TimetableWidgetProvider : AppWidgetProvider() {
             AppWidgetManager.getInstance(context)
                 .updateAppWidget(widgetId, RemoteViews(context.packageName, R.layout.widget)
                     .apply {
-//                        setOnClickPendingIntent(R.id.btn_configureWidget,
-//                            Intent(context, ConfigurationActivity::class.java)
-//                                .let { intent ->
-//                                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-//                                    intent.action = "configure_widget-$widgetId"
-//                                    PendingIntent.getActivity(
-//                                        context,
-//                                        0,
-//                                        intent,
-//                                        PendingIntent.FLAG_UPDATE_CURRENT
-//                                    )
-//                                })
+                        setOnClickPendingIntent(R.id.widgetContainer,
+                            Intent(context, ConfigurationActivity::class.java)
+                                .let { intent ->
+                                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                                    intent.action = "configure_widget-$widgetId"
+                                    PendingIntent.getActivity(
+                                        context,
+                                        0,
+                                        intent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT
+                                    )
+                                })
                     })
         }
         super.onEnabled(context)

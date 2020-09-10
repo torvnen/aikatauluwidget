@@ -4,9 +4,6 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import androidx.core.database.getStringOrNull
-import com.example.aikataulu.TimetableConfiguration
-import com.example.aikataulu.TimetableConfigurationData
 import com.example.aikataulu.database.contracts.ConfigurationContract
 import com.example.aikataulu.database.contracts.StopContract
 

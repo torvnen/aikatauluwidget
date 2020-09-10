@@ -1,6 +1,8 @@
 package com.example.aikataulu.database.contracts
 
+import android.database.Cursor
 import android.provider.BaseColumns
+import com.example.aikataulu.TimetableConfiguration
 
 object ConfigurationContract {
     const val SQL_CREATE_ENTRIES =
@@ -26,6 +28,21 @@ object ConfigurationContract {
                 COLUMN_NAME_SELECTED_STOP_ID,
                 COLUMN_NAME_AUTO_UPDATE_ENABLED
             )
+        }
+
+        fun cursorToPoco(cursor: Cursor?): TimetableConfiguration? {
+            return if (cursor != null && cursor.moveToFirst()) {
+                val entry = ConfigurationContract.ConfigurationEntry
+                val updateIntervalS =
+                    cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS))
+                val stopId =
+                    cursor.getString(cursor.getColumnIndex(entry.COLUMN_NAME_SELECTED_STOP_ID))
+                val isAutoUpdateEnabled =
+                    cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_AUTO_UPDATE_ENABLED)) == 1
+                val widgetId =
+                    cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_WIDGET_ID))
+                TimetableConfiguration(updateIntervalS, stopId, isAutoUpdateEnabled, widgetId)
+            } else null
         }
     }
 }
