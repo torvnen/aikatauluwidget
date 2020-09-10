@@ -4,18 +4,17 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ContentValues
 import android.content.Intent
+import android.database.ContentObserver
 import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
-import android.service.autofill.OnClickAction
+import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import com.example.aikataulu.*
 import com.example.aikataulu.database.contracts.ConfigurationContract
 
@@ -25,6 +24,14 @@ class ConfigurationActivity : AppCompatActivity() {
     private val TAG = "TIMETABLE.ConfigurationActivity"
     var widgetId: Int? = null
     lateinit var config: TimetableConfigurationData
+
+    class ConfigurationChangeHandler : Handler() {}
+
+    class ConfigurationObserver : ContentObserver(ConfigurationChangeHandler()) {
+        override fun onChange(selfChange: Boolean, uri: Uri?) {
+            super.onChange(selfChange, uri)
+        }
+    }
 
     private fun attachEventHandlers() {
         val saveButton = findViewById<Button>(R.id.saveButton)
@@ -44,7 +51,7 @@ class ConfigurationActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                config.stopName = s.toString()
+                config.stopId = s.toString()
             }
         })
         autoUpdate.setOnCheckedChangeListener { _, isChecked ->
@@ -80,12 +87,13 @@ class ConfigurationActivity : AppCompatActivity() {
         val updateInterval = findViewById<EditText>(R.id.updateInterval)
 
         autoUpdate.isChecked = config.autoUpdate
-        stopName.setText(config.stopName)
+        stopName.setText(config.stopId)
         updateInterval.setText(config.updateIntervalS.toString())
     }
 
     private fun updateInterval(seconds: Int) {
-        applicationContext.contentResolver.update(TimetableDataProvider.CONFIGURATION_URI,
+        applicationContext.contentResolver.update(
+            TimetableDataProvider.CONFIGURATION_URI,
             ContentValues().apply {
                 put(
                     ConfigurationContract.ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
@@ -121,6 +129,7 @@ class ConfigurationActivity : AppCompatActivity() {
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
         Log.d(TAG, "Creating configuration view for widget (id=$widgetId)")
         config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId!!)
+
         attachEventHandlers()
         loadUiState()
         populateConfigurationList(config)
@@ -152,7 +161,7 @@ class ConfigurationActivity : AppCompatActivity() {
             item.findViewById<TextView>(R.id.configItemValue).apply { text = value }
             return item!!
         }
-        createConfigurationItem("Stop", currentConfig.stopName, {
+        createConfigurationItem("Stop", currentConfig.stopId, {
             val transaction = supportFragmentManager.beginTransaction()
             val stopDialog = StopDialog()
         })

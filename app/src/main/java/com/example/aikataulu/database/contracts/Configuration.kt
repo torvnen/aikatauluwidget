@@ -19,5 +19,13 @@ object ConfigurationContract {
         const val COLUMN_NAME_UPDATE_INTERVAL_SECONDS = "updateinterval"
         const val COLUMN_NAME_SELECTED_STOP_ID = "selectedstop"
         const val COLUMN_NAME_AUTO_UPDATE_ENABLED = "autoupdate"
+        fun allColumns(): Array<String> {
+            return arrayOf(
+                COLUMN_NAME_WIDGET_ID,
+                COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
+                COLUMN_NAME_SELECTED_STOP_ID,
+                COLUMN_NAME_AUTO_UPDATE_ENABLED
+            )
+        }
     }
 }

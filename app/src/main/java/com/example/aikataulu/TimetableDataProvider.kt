@@ -22,6 +22,8 @@ class TimetableDataProvider : ContentProvider() {
         val TIMETABLE_DATA_URI: Uri = Uri.parse("content://com.example.android.aikataulu.data_provider")
         val CONFIGURATION_URI: Uri =
             Uri.parse("content://com.example.android.aikataulu.data_provider/configuration")
+        val STOP_URI: Uri =
+            Uri.parse("content://com.example.android.aikataulu.data_provider/stop")
     }
 
     override fun onCreate(): Boolean {
@@ -49,8 +51,20 @@ class TimetableDataProvider : ContentProvider() {
                 }
             }
         } else if (uri == CONFIGURATION_URI) {
-            // TODO
-            val widgetId = selection
+            val widgetId = selection?.toInt() ?: 0
+            return dbHelper.getConfigByWidgetId(widgetId)
+            /*
+            *
+        if (cursor != null && cursor.moveToFirst()) {
+            val updateIntervalS = cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS))
+            val stopId = cursor.getStringOrNull(cursor.getColumnIndex(entry.COLUMN_NAME_SELECTED_STOP_ID))
+            val isAutoUpdateEnabled = cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_AUTO_UPDATE_ENABLED)) == 1
+            return TimetableConfigurationData(updateIntervalS, stopId, isAutoUpdateEnabled)
+        }
+            *
+            * */
+        } else if (uri == STOP_URI) {
+
         }
         return null
     }
@@ -80,6 +94,7 @@ class TimetableDataProvider : ContentProvider() {
                     val newInterval = values.getAsInteger(ConfigurationContract.ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS)
                     if (newInterval != null) {
                         dbHelper.updateInterval(widgetId, newInterval.toInt())
+
                     }
                 }
             } else return 0

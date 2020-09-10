@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -31,7 +32,7 @@ class TimetableService : Service() {
     private fun setAutoUpdate(widgetId: Int, b: Boolean) {
         ensureTimedTaskCanceled(widgetId)
         val config = TimetableConfiguration.loadConfigForWidget(applicationContext, widgetId)
-        val stopName = config.stopName
+        val stopName = config.stopId
         Log.i(TAG, "${if (b) "Starting" else "Stopping"} auto-updating widgetId=$widgetId stopName=$stopName")
         if (b && stopName != null) {
             val stops = Api.getStopsContainingText(stopName)

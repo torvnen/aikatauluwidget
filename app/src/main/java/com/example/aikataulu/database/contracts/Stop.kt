@@ -15,5 +15,11 @@ object StopContract {
         const val TABLE_NAME = "stops"
         const val COLUMN_NAME_HRTID = "hrtid"
         const val COLUMN_NAME_STOPNAME = "name"
+        fun allColumns(): Array<String> {
+            return arrayOf(
+                COLUMN_NAME_HRTID,
+                COLUMN_NAME_STOPNAME
+            )
+        }
     }
 }
