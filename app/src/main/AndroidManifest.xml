@@ -24,9 +24,16 @@
         </activity>
         <provider
             android:exported="true"
-            android:widgetFeatures="reconfigurable"
             android:authorities="com.example.android.aikataulu.data_provider"
-            android:name=".TimetableDataProvider"/>
+            android:name=".providers.TimetableDataProvider"/>
+        <provider
+            android:exported="true"
+            android:authorities="com.example.android.aikataulu.configuration_provider"
+            android:name=".ConfigurationProvider"/>
+        <provider
+            android:exported="true"
+            android:authorities="com.example.android.aikataulu.stop_provider"
+            android:name=".StopProvider"/>
         <service android:enabled="true"
             android:exported="false"
             android:name=".TimetableService"
@@ -35,7 +42,7 @@
         <service android:name=".TimetableRemoteViewsService"
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS"/>
-        <receiver android:name=".TimetableWidgetProvider" >
+        <receiver android:name=".TimetableWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
