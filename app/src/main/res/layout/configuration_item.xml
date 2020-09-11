@@ -2,57 +2,58 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/configurationItem"
     android:layout_width="match_parent"
     android:layout_height="@dimen/config_row_height"
+    android:orientation="horizontal"
     android:padding="8dp"
-    android:id="@+id/configurationItem"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    android:orientation="horizontal">
+    app:layout_constraintTop_toTopOf="parent">
 
-        <FrameLayout
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0">
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0">
 
-                <ImageView
-                    android:id="@+id/configurationItemIcon"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="#000"
-                    app:srcCompat="@drawable/outline_edit_location_white_48"
-                    tools:visibility="visible" />
-        </FrameLayout>
+        <ImageView
+            android:id="@+id/configurationItemIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            app:srcCompat="@drawable/outline_pin_drop_black_48"
+            tools:visibility="visible" />
+    </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="8dp">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="16dp">
 
-                <TextView
-                    android:id="@+id/configItemName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Configuration item name"
-                    android:textAppearance="@style/WidgetTitle" />
+        <TextView
+            android:id="@+id/configItemName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configuration item name"
+            android:textAppearance="@style/WidgetTitle"
+            android:textSize="18sp" />
 
-                <TextView
-                    android:id="@+id/configItemValue"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Value" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/configItemValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Value"
+            android:textSize="18sp" />
+    </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/configItemInput"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
+    <FrameLayout
+        android:id="@+id/configItemInput"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
 
-        </FrameLayout>
+    </FrameLayout>
 
 </LinearLayout>
