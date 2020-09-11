@@ -6,6 +6,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.database.ContentObserver
+import android.database.Cursor
 import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
@@ -17,106 +18,131 @@ import com.example.aikataulu.database.contracts.StopContract
 import com.example.aikataulu.models.Departure
 import com.example.aikataulu.models.Stop
 import com.example.aikataulu.models.Timetable
+import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.ui.MainActivity
 import com.google.gson.Gson
 import java.util.*
 import kotlin.collections.HashMap
 
+
+class TimetableTask(private val context: Context, private val config: TimetableConfiguration) :
+    TimerTask() {
+    private var stop: Stop
+
+    companion object {
+        private const val TAG = "TIMETABLE.TimetableTask"
+    }
+
+    init {
+        val cursor = context.contentResolver.query(
+            TimetableDataProvider.STOP_URI,
+            null,
+            "${StopContract.StopEntry.COLUMN_NAME_HRTID} = ?",
+            arrayOf(config.stopId),
+            null,
+            null
+        )
+        cursor!!.moveToFirst()
+        stop = Stop(
+            cursor.getString(cursor.getColumnIndex(StopContract.StopEntry.COLUMN_NAME_STOPNAME)),
+            cursor.getString(cursor.getColumnIndex(StopContract.StopEntry.COLUMN_NAME_HRTID))
+        )
+    }
+
+    override fun run() {
+        val widgetId = config.widgetId!!
+        val departures =
+            Api.getDeparturesForStopId(config.stopId!!).map { Departure(it) }
+        Log.d(
+            TAG,
+            "[WidgetId=${config.widgetId}]: Received ${departures.count()} departures for stop ${config.stopId})"
+        )
+
+        // Update content
+        context.contentResolver.update(
+            TimetableDataProvider.TIMETABLE_DATA_URI,
+            ContentValues().apply {
+                put(
+                    TimetableDataProvider.COLUMN_TIMETABLE,
+                    Gson().toJson(Timetable(widgetId, stop, departures))
+                )
+            },
+            stop.hrtId,
+            null
+        )
+        context.contentResolver.notifyChange(TimetableDataProvider.TIMETABLE_DATA_URI, null)
+        // Notify WidgetProvider of the changes
+        TimetableWidgetProvider.sendUpdateWidgetBroadcast(
+            context,
+            config.widgetId!!
+        )
+    }
+}
+
+class TimetableTaskRunner(
+    private val context: Context
+) : ContentObserver(Handler()) {
+    private val _tasks = HashMap<Int, Pair<Timer, TimetableTask>>()
+    private var cursor: Cursor? = null
+
+    companion object {
+        private const val TAG = "TIMETABLE.ServiceConfigurationObserver"
+    }
+
+    fun cancelAllTasks() {
+        _tasks.all {
+            it.value.first.cancel()
+            it.value.second.cancel()
+        }
+    }
+
+    override fun onChange(selfChange: Boolean, uri: Uri?) {
+        Log.d(TAG, "[selfChange=$selfChange] ConfigurationObserver triggered by uri ${uri?.toString()}")
+        val entry = ConfigurationContract.ConfigurationEntry
+
+        // Find and return configuration for all widgets
+        cursor = context.contentResolver.query(
+            TimetableDataProvider.CONFIGURATION_URI,
+            null,
+            null,
+            null,
+            null
+        )
+
+        // Clear and remove all tasks
+        cancelAllTasks()
+        val keys = _tasks.keys
+        keys.forEach { _tasks.remove(it) }
+
+        while (cursor?.moveToNext() == true) {
+            val config = ConfigurationContract.ConfigurationEntry.cursorToPoco(cursor)
+            if (config != null) {
+                val widgetId = config.widgetId
+                if (config.autoUpdate && widgetId != null && widgetId > 0) {
+                    Log.d(TAG, "[WidgetId=$widgetId] Starting task with interval [${config.updateIntervalS} seconds]")
+
+                    _tasks[widgetId] = Pair(Timer(), TimetableTask(context, config))
+                    _tasks[widgetId]!!.first.scheduleAtFixedRate(
+                        _tasks[widgetId]!!.second,
+                        0,
+                        (config.updateIntervalS * 1000).toLong()
+                    )
+                } else {
+                    Log.i(
+                        TAG,
+                        "[WidgetId=$widgetId]: AutoUpdate=${config.autoUpdate}. Not starting task."
+                    )
+                }
+            } else Log.w(TAG, "Null configuration")
+        }
+    }
+}
+
 class TimetableService : Service() {
-    private val _tasks = HashMap<Int, TimerTask>()
-    private val _timers = HashMap<Int, Timer>()
-    private lateinit var _observer: ConfigurationObserver
+    private lateinit var _observer: TimetableTaskRunner
 
     companion object {
         private const val TAG = "TIMETABLE.Service"
-    }
-
-    private class ConfigurationObserver(
-        val context: Context,
-        val callback: (TimetableConfiguration?) -> Unit
-    ) : ContentObserver(Handler()) {
-        override fun onChange(selfChange: Boolean, uri: Uri?) {
-            super.onChange(selfChange, uri)
-            // Find and return configuration for this widget
-            val cursor = context.contentResolver.query(
-                TimetableDataProvider.CONFIGURATION_URI,
-                null,
-                null,
-                null,
-                null
-            )
-            while (cursor != null && cursor.moveToNext()) {
-                callback(ConfigurationContract.ConfigurationEntry.cursorToPoco(cursor))
-            }
-        }
-    }
-
-    private fun ensureTimedTaskCanceled(widgetId: Int) {
-        _tasks.filter { it.key == widgetId }.forEach { it.value.cancel() }
-    }
-
-
-    private fun updateTask(config: TimetableConfiguration?) {
-        if (config == null) {
-            return
-        }
-        val c = config!!
-        val widgetId = c.widgetId!!
-        ensureTimedTaskCanceled(c.widgetId ?: 0)
-        Log.i(
-            TAG,
-            "${if (c.autoUpdate) "Starting" else "Stopping"} auto-updating widgetId=$widgetId stopId=${c.stopId}"
-        )
-        if (c.autoUpdate) {
-            val cursor = applicationContext.contentResolver.query(
-                TimetableDataProvider.STOP_URI,
-                null,
-                "${StopContract.StopEntry.COLUMN_NAME_HRTID} = ?",
-                arrayOf(config.stopId),
-                null,
-                null
-            )
-            cursor!!.moveToFirst()
-            val stop = Stop(
-                cursor.getString(cursor.getColumnIndex(StopContract.StopEntry.COLUMN_NAME_STOPNAME)),
-                cursor.getString(cursor.getColumnIndex(StopContract.StopEntry.COLUMN_NAME_HRTID))
-            )
-            Log.i(TAG, "Chose the stop ${stop.hrtId} (${stop.name})")
-            _tasks[widgetId] = object : TimerTask() {
-                override fun run() {
-                    val departures =
-                        Api.getDeparturesForStopId(stop.hrtId).map { Departure(it) }
-                    Log.d(
-                        TAG,
-                        "[WidgetId=$widgetId]: Received ${departures.count()} departures for stop ${stop.name} (${stop.hrtId})"
-                    )
-
-                    // Update content
-                    applicationContext.contentResolver.update(
-                        TimetableDataProvider.TIMETABLE_DATA_URI,
-                        ContentValues().apply {
-                            put(
-                                TimetableDataProvider.COLUMN_TIMETABLE,
-                                Gson().toJson(Timetable(widgetId, stop, departures))
-                            )
-                        },
-                        stop.hrtId,
-                        emptyArray<String>()
-                    )
-                    // Notify WidgetProvider of the changes
-                    TimetableWidgetProvider.sendUpdateWidgetBroadcast(
-                        applicationContext,
-                        widgetId
-                    )
-                }
-            }
-            _timers[widgetId] = Timer()
-            _timers[widgetId]!!.scheduleAtFixedRate(
-                _tasks[widgetId],
-                0,
-                (1000 * config.updateIntervalS).toLong()
-            )
-        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -142,15 +168,11 @@ class TimetableService : Service() {
     }
 
     override fun onCreate() {
-        _observer = ConfigurationObserver(applicationContext) { config ->
-            if (config != null) {
-                ensureTimedTaskCanceled(config.widgetId ?: 0)
-                updateTask(config)
-            }
-        }
+        Log.d(TAG, "Registering configuration observer")
+        _observer = TimetableTaskRunner(applicationContext)
         applicationContext.contentResolver.registerContentObserver(
             TimetableDataProvider.CONFIGURATION_URI,
-            true,
+            false,
             _observer
         )
         // Notify of change so that the initial tasks are started
@@ -158,13 +180,11 @@ class TimetableService : Service() {
             TimetableDataProvider.CONFIGURATION_URI,
             null
         )
-        super.onCreate()
     }
 
     override fun onDestroy() {
         // Cancel all tasks and unregister observer to avoid memory leaks
-        _tasks.forEach { it.value.cancel() }
+        _observer.cancelAllTasks()
         applicationContext.contentResolver.unregisterContentObserver(_observer)
-        super.onDestroy()
     }
 }

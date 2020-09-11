@@ -4,7 +4,8 @@ data class TimetableConfiguration(
     var updateIntervalS: Int = 10,
     var stopId: String? = null,
     var autoUpdate: Boolean = false,
-    var widgetId: Int? = null
+    var widgetId: Int? = null,
+    var stopName: String? = null
 ) {
     fun getUpdateIntervalText(): String {
         val m = updateIntervalS / 60

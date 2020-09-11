@@ -2,10 +2,10 @@ package com.example.aikataulu.ui
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.ContentValues
 import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -13,11 +13,14 @@ import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.example.aikataulu.R
 import com.example.aikataulu.TimetableConfiguration
+import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.api.Api
+import com.example.aikataulu.database.contracts.StopContract
 import com.example.aikataulu.models.Stop
 import com.jakewharton.rxbinding4.widget.textChanges
 
-class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfiguration) -> Unit) : DialogFragment() {
+class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfiguration) -> Unit) :
+    DialogFragment() {
     private val searches = HashMap<String, ArrayList<Stop>>()
     private var suggestions: List<String> = ArrayList<String>()
     private var searchTerm: String = ""
@@ -48,17 +51,17 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
             threshold = 0
             // Execute an API call to fill the suggestions
             textChanges().subscribe { text ->
-                    val textStr = text.toString()
-                    if (text.isNotEmpty() && !searches.containsKey(textStr)) {
-                        Api.getStopsContainingText(textStr, {
-                            searches[textStr] = it
-                            Log.d(TAG, "Found ${it.size} stops for search term $textStr")
-                            if (autoComplete.text.toString() == textStr) {
-                                activity!!.runOnUiThread {setSuggestions(it)}
-                            }
-                        }, {})
-                    }
+                val textStr = text.toString()
+                if (text.isNotEmpty() && !searches.containsKey(textStr)) {
+                    Api.getStopsContainingText(textStr, {
+                        searches[textStr] = it
+                        Log.d(TAG, "Found ${it.size} stops for search term $textStr")
+                        if (autoComplete.text.toString() == textStr) {
+                            activity!!.runOnUiThread { setSuggestions(it) }
+                        }
+                    }, {})
                 }
+            }
             // Set the suggestions to be the search results when text is changed.
             textChanges().subscribe { text ->
                 val textStr = text.toString()
@@ -67,22 +70,27 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
                     if (searches.containsKey(searchTerm)) {
                         Log.d(TAG, "A search result for str=\"$searchTerm\" exists.")
                         setSuggestions(searches[searchTerm]!!)
-                    }}
-            }
-            onItemClickListener = object: AdapterView.OnItemClickListener {
-                override fun onItemClick(
-                    parent: AdapterView<*>?,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    val text = (view as TextView).text
-                    val idStart = text.lastIndexOf('(') + 1
-                    val idEnd = text.lastIndexOf(')') - 1
-                    val hrtId = text.substring(idStart, idEnd)
-                    selectedStopId = hrtId
+                    }
                 }
             }
+            onItemClickListener =
+                AdapterView.OnItemClickListener { parent, view, position, id ->
+                    val text = (view as TextView).text
+                    val stopName = text.substring(0, text.lastIndexOf('(') - 1)
+                    val idStart = text.lastIndexOf('(') + 1
+                    val idEnd = text.lastIndexOf(')')
+                    val hrtId = text.substring(idStart, idEnd)
+                    selectedStopId = hrtId
+
+                    // Insert selected stop to DB
+                    activity!!.applicationContext.contentResolver.insert(
+                        TimetableDataProvider.STOP_URI,
+                        ContentValues().apply {
+                            val entry = StopContract.StopEntry
+                            put(entry.COLUMN_NAME_STOPNAME, stopName)
+                            put(entry.COLUMN_NAME_HRTID, hrtId)
+                        })
+                }
             setAdapter(autoCompleteAdapter)
         }
         val builder = AlertDialog.Builder(activity)
@@ -96,7 +104,7 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
                 d.dismiss()
             } else d.cancel()
         }
-        builder.setNegativeButton("Cancel") {d: DialogInterface, _ ->
+        builder.setNegativeButton("Cancel") { d: DialogInterface, _ ->
             d.dismiss()
         }
         return builder.create()
