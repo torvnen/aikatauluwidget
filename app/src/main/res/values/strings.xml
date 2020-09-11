@@ -12,4 +12,5 @@
     <string name="label_auto_update_unit">seconds</string>
     <string name="label_button_save">Save settings</string>
     <string name="conf_activity_label">Timetable widget configuration</string>
+    <string name="stop_autocomplete_hint">Name of the stop</string>
 </resources>

@@ -17,7 +17,9 @@
         <AutoCompleteTextView
             android:id="@+id/stopAutoComplete"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"></AutoCompleteTextView>
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:hint="@string/stop_autocomplete_hint"></AutoCompleteTextView>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

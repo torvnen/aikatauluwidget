@@ -93,7 +93,7 @@ class ConfigurationActivity : AppCompatActivity() {
             widgetId!!.toString(),
             null
         )
-        populateConfigurationView(viewModel)
+        populateConfigurationView(vm)
     }
 
     fun onIntervalRadioButtonClicked(view: View) {
@@ -173,13 +173,19 @@ class ConfigurationActivity : AppCompatActivity() {
             }
             return item!!
         }
-
-        configurationList.addView(createConfigurationItem("Stop", viewModel!!.stopId, {
-            val transaction = supportFragmentManager.beginTransaction()
-            val stopDialog = StopDialog()
-            transaction.add(stopDialog, StopDialog.TAG)
-            transaction.commit()
-        }))
+        configurationList.addView(
+            createConfigurationItem(
+                "Stop",
+                viewModel!!.stopId ?: "Touch to select a stop",
+                {
+                    val transaction = supportFragmentManager.beginTransaction()
+                    val stopDialog = StopDialog(viewModel!!) {
+                        update(it)
+                    }
+                    transaction.add(stopDialog, StopDialog.TAG)
+                    transaction.commit()
+                })
+        )
         configurationList.addView(
             createConfigurationItem(
                 "Automatic updates",
@@ -187,12 +193,16 @@ class ConfigurationActivity : AppCompatActivity() {
                 {
                     val switch = it.findViewById<Switch>(R.id.autoUpdateSwitch)
                     switch.toggle()
-                    viewModel!!.autoUpdate = switch.isChecked
                 },
                 null,
                 Switch(this).apply {
                     id = R.id.autoUpdateSwitch
                     text = ""
+                    isChecked = viewModel!!.autoUpdate
+                    setOnCheckedChangeListener {_, isChecked: Boolean ->
+                        viewModel!!.autoUpdate = isChecked
+                        update(viewModel!!)
+                    }
                 })
         )
         configurationList.addView(
