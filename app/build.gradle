@@ -51,4 +51,7 @@ dependencies {
     implementation("com.apollographql.apollo:apollo-runtime:2.0.0")
     compileOnly("org.jetbrains:annotations:13.0")
     testCompileOnly("org.jetbrains:annotations:13.0")
+    // RxBinding:
+    implementation 'com.jakewharton.rxbinding4:rxbinding:4.0.0'
+    implementation 'com.jakewharton.rxbinding4:rxbinding-core:4.0.0'
 }
