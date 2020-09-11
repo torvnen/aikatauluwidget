@@ -6,6 +6,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.database.ContentObserver
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -15,85 +16,88 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.aikataulu.*
 import com.example.aikataulu.database.contracts.ConfigurationContract
+import com.example.aikataulu.providers.TimetableDataProvider
+import com.google.gson.Gson
 
 class ConfigurationActivity : AppCompatActivity() {
     companion object {
+        const val EXTRA_APP_WIDGET_EXISTS = "appWidgetExists"
         var widgetId: Int? = null
         private const val TAG = "TIMETABLE.ConfigurationActivity"
         private lateinit var intervalDialog: IntervalDialog
         private var viewModel: TimetableConfiguration? = null
+        private var doesWidgetExist: Boolean? = null
         private lateinit var observer: ConfigurationObserver
     }
 
     class ConfigurationObserver(
-        val context: Context,
-        val widgetId: Int,
+        private val context: Context,
+        private val widgetId: Int,
         val callback: (TimetableConfiguration?) -> Unit
     ) : ContentObserver(Handler()) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
-            super.onChange(selfChange, uri)
+            Log.d(TAG, "[selfChange=$selfChange] ConfigurationObserver triggered")
             // Find and return configuration for this widget
             val cursor = context.contentResolver.query(
                 TimetableDataProvider.CONFIGURATION_URI,
                 null,
-                widgetId.toString(),
-                null,
+                "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
+                arrayOf(widgetId.toString()),
                 null
             )
+            cursor?.moveToFirst()
             callback(ConfigurationContract.ConfigurationEntry.cursorToPoco(cursor))
         }
     }
 
-    private fun attachEventHandlers() {
-        val saveButton = findViewById<Button>(R.id.saveButton)
-        saveButton.setOnClickListener {
-            val wId = widgetId!! // Make it throw right away if null/unset. Should never occur.
-            // Notify Widget Provider of config changes
-            // Send empty bundle (for now), the config will be read via other methods
-            AppWidgetManager.getInstance(applicationContext).updateAppWidgetOptions(wId, Bundle())
-
-            // Close main activity
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            intent.putExtra("Exit", true)
-            startActivity(intent)
-            // Set result of activity and finish
-            setResult(
-                Activity.RESULT_OK,
-                Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
+    private fun contentValues(vm: TimetableConfiguration): ContentValues {
+        val entry = ConfigurationContract.ConfigurationEntry
+        return ContentValues().apply {
+            put(entry.COLUMN_NAME_WIDGET_ID, widgetId)
+            put(
+                entry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
+                vm.updateIntervalS
             )
-            finish()
+            put(
+                entry.COLUMN_NAME_AUTO_UPDATE_ENABLED,
+                vm.autoUpdate
+            )
+            put(
+                entry.COLUMN_NAME_SELECTED_STOP_ID,
+                vm.stopId
+            )
         }
     }
 
-    private fun update(vm: TimetableConfiguration) {
-        val values = ContentValues().apply {
-            if (vm.updateIntervalS != viewModel!!.updateIntervalS) {
-                put(
-                    ConfigurationContract.ConfigurationEntry.COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
-                    vm.updateIntervalS
-                )
-            }
-            if (vm.autoUpdate != viewModel!!.autoUpdate) {
-                put(
-                    ConfigurationContract.ConfigurationEntry.COLUMN_NAME_AUTO_UPDATE_ENABLED,
-                    vm.autoUpdate
-                )
-            }
-            if (vm.stopId != viewModel!!.stopId) {
-                put(
-                    ConfigurationContract.ConfigurationEntry.COLUMN_NAME_SELECTED_STOP_ID,
-                    vm.stopId
-                )
-            }
-        }
-        applicationContext.contentResolver.update(
+    private fun save(vm: TimetableConfiguration) {
+        val values = contentValues(vm)
+        applicationContext.contentResolver.insert(
             TimetableDataProvider.CONFIGURATION_URI,
-            values,
-            widgetId!!.toString(),
-            null
+            values
         )
-        populateConfigurationView(vm)
+        // Always notify observers
+        applicationContext.contentResolver.notifyChange(
+            TimetableDataProvider.CONFIGURATION_URI,
+            observer
+        )
+    }
+
+    private fun update(vm: TimetableConfiguration, redraw: Boolean = false) {
+        if (doesWidgetExist == true) {
+            val entry = ConfigurationContract.ConfigurationEntry
+            val values = contentValues(vm)
+            applicationContext.contentResolver.update(
+                TimetableDataProvider.CONFIGURATION_URI,
+                values,
+                "${entry.COLUMN_NAME_WIDGET_ID} = ?",
+                arrayOf(widgetId!!.toString())
+            )
+            // No reason to update if it's the initial creation phase
+            applicationContext.contentResolver.notifyChange(
+                TimetableDataProvider.CONFIGURATION_URI,
+                if (redraw) null else observer
+            )
+        } else if (redraw) render(vm)
     }
 
     fun onIntervalRadioButtonClicked(view: View) {
@@ -107,7 +111,7 @@ class ConfigurationActivity : AppCompatActivity() {
                 R.id.interval_15m -> vm.updateIntervalS = (900)
                 R.id.interval_30m -> vm.updateIntervalS = (1800)
             }
-            update(vm)
+            update(vm, true)
             intervalDialog.closeDialog()
         }
     }
@@ -117,34 +121,67 @@ class ConfigurationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.configuration_activity)
 
+        // Process Extras
         widgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+        doesWidgetExist = intent?.extras?.getBoolean(EXTRA_APP_WIDGET_EXISTS, false) ?: false
+
+        // Register an observer that will trigger (re)rendering the view
         observer =
-            ConfigurationObserver(this, widgetId!!) { config -> populateConfigurationView(config) }
+            ConfigurationObserver(this, widgetId!!) {
+                render(it)
+            }
         applicationContext.contentResolver.registerContentObserver(
             TimetableDataProvider.CONFIGURATION_URI,
             true,
             observer
         )
-        applicationContext.contentResolver.notifyChange(
-            TimetableDataProvider.CONFIGURATION_URI,
-            null
-        )
-        attachEventHandlers()
-        populateConfigurationView(viewModel)
+        // Trigger the initial render of configuration items by notifying of a fake non-self change
+        if (doesWidgetExist == true) {
+            applicationContext.contentResolver.notifyChange(
+                TimetableDataProvider.CONFIGURATION_URI,
+                null
+            )
+        } else render(null)
+        // Attach Save (or Exit) functionality
+        findViewById<Button>(R.id.saveButton).let {
+            it.text = if (doesWidgetExist == true) "Exit" else "Save settings"
+            it.setOnClickListener {
+                save(viewModel!!)
+                val wId = widgetId!! // Make it throw right away if null/unset. Should never occur.
+                // Notify Widget Provider of config changes
+                // Send empty bundle (for now), the config will be read via other methods
+                AppWidgetManager.getInstance(applicationContext)
+                    .updateAppWidgetOptions(wId, Bundle())
+
+                // Close main activity
+                val intent = Intent(this, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                intent.putExtra("Exit", true)
+                startActivity(intent)
+                // Set result of activity and finish
+                setResult(
+                    Activity.RESULT_OK,
+                    Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, wId)
+                )
+                finish()
+            }
+        }
     }
 
-    private fun populateConfigurationView(currentConfig: TimetableConfiguration?) {
+    private fun render(currentConfig: TimetableConfiguration?) {
         viewModel = currentConfig ?: viewModel ?: TimetableConfiguration()
+        viewModel!!.widgetId = widgetId
+        Log.d(TAG, "Rendering configuration items. Config VM: ${Gson().toJson(viewModel!!)}")
         val configurationList = findViewById<LinearLayout>(R.id.configurationList)
         configurationList.removeAllViews()
         fun createConfigurationItem(
             itemName: String,
             value: String?,
             onClick: (View) -> Unit,
-            iconAsset: String? = null,
+            iconDrawable: Drawable? = null,
             input: View? = null
         ): View {
             val item =
@@ -155,7 +192,8 @@ class ConfigurationActivity : AppCompatActivity() {
                 }
             // Icon
             item.findViewById<ImageView>(R.id.configurationItemIcon).apply {
-                if (iconAsset == null) visibility = android.view.View.INVISIBLE
+                if (iconDrawable == null) visibility = android.view.View.INVISIBLE
+                else setImageDrawable(iconDrawable)
             }
             // Main label (configuration item name)
             item.findViewById<TextView>(R.id.configItemName).apply {
@@ -180,11 +218,13 @@ class ConfigurationActivity : AppCompatActivity() {
                 {
                     val transaction = supportFragmentManager.beginTransaction()
                     val stopDialog = StopDialog(viewModel!!) {
-                        update(it)
+                        update(it, true)
                     }
                     transaction.add(stopDialog, StopDialog.TAG)
                     transaction.commit()
-                })
+                },
+                resources.getDrawable(R.drawable.outline_pin_drop_black_48, null)
+            )
         )
         configurationList.addView(
             createConfigurationItem(
@@ -194,12 +234,12 @@ class ConfigurationActivity : AppCompatActivity() {
                     val switch = it.findViewById<Switch>(R.id.autoUpdateSwitch)
                     switch.toggle()
                 },
-                null,
+                resources.getDrawable(R.drawable.outline_update_black_48, null),
                 Switch(this).apply {
                     id = R.id.autoUpdateSwitch
                     text = ""
                     isChecked = viewModel!!.autoUpdate
-                    setOnCheckedChangeListener {_, isChecked: Boolean ->
+                    setOnCheckedChangeListener { _, isChecked: Boolean ->
                         viewModel!!.autoUpdate = isChecked
                         update(viewModel!!)
                     }
@@ -214,7 +254,9 @@ class ConfigurationActivity : AppCompatActivity() {
                     intervalDialog = IntervalDialog(viewModel!!.updateIntervalS)
                     transaction.add(intervalDialog, IntervalDialog.TAG)
                     transaction.commit()
-                })
+                },
+                resources.getDrawable(R.drawable.outline_timer_black_48, null)
+            )
         )
     }
 }
