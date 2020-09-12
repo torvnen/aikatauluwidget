@@ -20,14 +20,14 @@ import com.example.aikataulu.providers.TimetableDataProvider
 import com.google.gson.Gson
 
 class ConfigurationActivity : AppCompatActivity() {
+
     companion object {
-        const val EXTRA_APP_WIDGET_EXISTS = "appWidgetExists"
         var widgetId: Int? = null
         private const val TAG = "TIMETABLE.ConfigurationActivity"
         private lateinit var intervalDialog: IntervalDialog
         private var viewModel: TimetableConfiguration? = null
-        private var doesWidgetExist: Boolean? = null
         private lateinit var observer: ConfigurationObserver
+        private var doesWidgetExist: Boolean? = null
     }
 
     class ConfigurationObserver(
@@ -116,6 +116,19 @@ class ConfigurationActivity : AppCompatActivity() {
         }
     }
 
+    private fun getExistingConfigurationOrNull(widgetId: Int): TimetableConfiguration? {
+        val cursor = applicationContext.contentResolver.query(
+            ConfigurationProvider.CONFIGURATION_URI, null,
+            "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
+            arrayOf(widgetId.toString()),
+            null,
+            null
+        )
+        return if (cursor?.moveToFirst() == true) ConfigurationContract.ConfigurationEntry.cursorToPoco(
+            cursor
+        ) else null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "Creating configuration view for widget (id=$widgetId)")
         super.onCreate(savedInstanceState)
@@ -126,7 +139,8 @@ class ConfigurationActivity : AppCompatActivity() {
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        doesWidgetExist = intent?.extras?.getBoolean(EXTRA_APP_WIDGET_EXISTS, false) ?: false
+        viewModel = getExistingConfigurationOrNull(widgetId!!)
+        doesWidgetExist = viewModel != null
 
         // Register an observer that will trigger (re)rendering the view
         observer =
@@ -138,16 +152,11 @@ class ConfigurationActivity : AppCompatActivity() {
             true,
             observer
         )
-        // Trigger the initial render of configuration items by notifying of a fake non-self change
-        if (doesWidgetExist == true) {
-            applicationContext.contentResolver.notifyChange(
-                TimetableDataProvider.CONFIGURATION_URI,
-                null
-            )
-        } else render(null)
+        // Trigger the initial render
+        render(viewModel)
         // Attach Save (or Exit) functionality
         findViewById<Button>(R.id.saveButton).let {
-            it.text = if (doesWidgetExist == true) "Exit" else "Save settings"
+            it.text = "Save and exit"
             it.setOnClickListener {
                 save(viewModel!!)
                 val wId = widgetId!! // Make it throw right away if null/unset. Should never occur.
@@ -211,10 +220,17 @@ class ConfigurationActivity : AppCompatActivity() {
             }
             return item!!
         }
+
+        val stopText = if (viewModel?.stopId != null) StopProvider.getStopByIdOrNull(
+            viewModel!!.stopId!!,
+            applicationContext
+        ).let {
+            "${it!!.name} (${it!!.hrtId})"
+        } else "Touch to select a stop"
         configurationList.addView(
             createConfigurationItem(
                 "Stop",
-                viewModel!!.stopId ?: "Touch to select a stop",
+                stopText,
                 {
                     val transaction = supportFragmentManager.beginTransaction()
                     val stopDialog = StopDialog(viewModel!!) {
