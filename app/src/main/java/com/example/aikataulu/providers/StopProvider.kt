@@ -2,22 +2,35 @@ package com.example.aikataulu
 
 import android.content.ContentProvider
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import android.net.Uri
 import android.util.Log
 import com.example.aikataulu.database.TimetableDbHelper
-import com.example.aikataulu.database.contracts.ConfigurationContract
 import com.example.aikataulu.database.contracts.StopContract
+import com.example.aikataulu.models.Stop
 
 class StopProvider : ContentProvider() {
-    private val entry = StopContract.StopEntry
     private lateinit var dbHelper: TimetableDbHelper
 
     companion object {
+        private val entry = StopContract.StopEntry
         const val TAG = "TIMETABLE.ConfigurationProvider"
         val STOP_URI: Uri =
             Uri.parse("content://com.example.android.aikataulu.stop_provider")
+
+        fun getStopByIdOrNull(hrtId: String, context: Context): Stop? {
+            val cursor = context.contentResolver.query(
+                STOP_URI,
+                null,
+                "${entry.COLUMN_NAME_HRTID} = ?",
+                arrayOf(hrtId),
+                null,
+                null
+            )
+            return if (cursor?.moveToFirst() == true) entry.cursorToPoco(cursor) else null
+        }
     }
 
     override fun onCreate(): Boolean {

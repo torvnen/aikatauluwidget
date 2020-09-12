@@ -1,5 +1,6 @@
 package com.example.aikataulu
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.providers.TimetableDataProvider
+import com.example.aikataulu.ui.ConfigurationActivity
 
 // https://android.googlesource.com/platform/development/+/master/samples/WeatherListWidget/src/com/example/android/weatherlistwidget/WeatherWidgetService.java
 class TimetableRemoteViewsService : RemoteViewsService() {

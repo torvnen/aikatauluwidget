@@ -1,6 +1,9 @@
 package com.example.aikataulu.database.contracts
 
+import android.database.Cursor
 import android.provider.BaseColumns
+import com.example.aikataulu.TimetableConfiguration
+import com.example.aikataulu.models.Stop
 
 object StopContract {
     const val SQL_CREATE_ENTRIES =
@@ -20,6 +23,16 @@ object StopContract {
                 COLUMN_NAME_HRTID,
                 COLUMN_NAME_STOPNAME
             )
+        }
+        fun cursorToPoco(cursor: Cursor?): Stop? {
+            return if (cursor != null) {
+                val entry = StopEntry
+                val hrtId =
+                    cursor.getString(cursor.getColumnIndex(entry.COLUMN_NAME_HRTID))
+                val name =
+                    cursor.getString(cursor.getColumnIndex(entry.COLUMN_NAME_STOPNAME))
+                Stop(name, hrtId)
+            } else null
         }
     }
 }

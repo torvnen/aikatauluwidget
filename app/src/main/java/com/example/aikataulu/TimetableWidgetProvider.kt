@@ -45,29 +45,6 @@ class TimetableWidgetProvider : AppWidgetProvider() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context!!.startForegroundService(Intent(context, TimetableService::class.java))
         } else throw Exception("TIMETABLE: SDK Level too low. Cannot start foreground service.")
-        // Perform this loop procedure for each App Widget that belongs to this provider
-        getExistingWidgetIds(context).forEach { widgetId ->
-            Log.i(TAG, "Attaching click handler to widget id $widgetId")
-            AppWidgetManager.getInstance(context)
-                .updateAppWidget(widgetId, RemoteViews(context.packageName, R.layout.widget)
-                    .apply {
-                        setOnClickPendingIntent(R.id.widgetContainer,
-                            Intent(context, ConfigurationActivity::class.java)
-                                .let { intent ->
-                                    intent.putExtra(
-                                        AppWidgetManager.EXTRA_APPWIDGET_ID,
-                                        widgetId
-                                    )
-                                    intent.action = "configure_widget-$widgetId"
-                                    PendingIntent.getActivity(
-                                        context,
-                                        0,
-                                        intent,
-                                        PendingIntent.FLAG_UPDATE_CURRENT
-                                    )
-                                })
-                    })
-        }
         super.onEnabled(context)
     }
 
@@ -90,6 +67,22 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                                 }
                             )
+                            setOnClickPendingIntent(R.id.widgetContainer,
+                                Intent(context, ConfigurationActivity::class.java)
+                                    .let { intent ->
+                                        intent.putExtra(
+                                            AppWidgetManager.EXTRA_APPWIDGET_ID,
+                                            widgetId
+                                        )
+                                        intent.action = "configure_widget-$widgetId"
+                                        intent.type = "configure_widget-$widgetId"
+                                        PendingIntent.getActivity(
+                                            context,
+                                            widgetId,
+                                            intent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT
+                                        )
+                                    })
                         })
 
                     notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)
