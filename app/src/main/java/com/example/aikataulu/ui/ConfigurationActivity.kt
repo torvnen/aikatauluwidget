@@ -36,17 +36,8 @@ class ConfigurationActivity : AppCompatActivity() {
         val callback: (TimetableConfiguration?) -> Unit
     ) : ContentObserver(Handler()) {
         override fun onChange(selfChange: Boolean, uri: Uri?) {
-            Log.d(TAG, "[selfChange=$selfChange] ConfigurationObserver triggered")
-            // Find and return configuration for this widget
-            val cursor = context.contentResolver.query(
-                TimetableDataProvider.CONFIGURATION_URI,
-                null,
-                "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
-                arrayOf(widgetId.toString()),
-                null
-            )
-            cursor?.moveToFirst()
-            callback(ConfigurationContract.ConfigurationEntry.cursorToPoco(cursor))
+            Log.d(TAG, "[selfChange=$selfChange, WidgetId=$widgetId] ConfigurationObserver triggered")
+            callback(ConfigurationProvider.getExistingConfigurationOrNull(widgetId, context))
         }
     }
 
@@ -116,19 +107,6 @@ class ConfigurationActivity : AppCompatActivity() {
         }
     }
 
-    private fun getExistingConfigurationOrNull(widgetId: Int): TimetableConfiguration? {
-        val cursor = applicationContext.contentResolver.query(
-            ConfigurationProvider.CONFIGURATION_URI, null,
-            "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
-            arrayOf(widgetId.toString()),
-            null,
-            null
-        )
-        return if (cursor?.moveToFirst() == true) ConfigurationContract.ConfigurationEntry.cursorToPoco(
-            cursor
-        ) else null
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "Creating configuration view for widget (id=$widgetId)")
         super.onCreate(savedInstanceState)
@@ -139,7 +117,7 @@ class ConfigurationActivity : AppCompatActivity() {
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        viewModel = getExistingConfigurationOrNull(widgetId!!)
+        viewModel = ConfigurationProvider.getExistingConfigurationOrNull(widgetId!!, applicationContext)
         doesWidgetExist = viewModel != null
 
         // Register an observer that will trigger (re)rendering the view

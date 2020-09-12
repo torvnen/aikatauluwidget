@@ -56,22 +56,19 @@ class TimetableRemoteViewsService : RemoteViewsService() {
                 arrayOf(_widgetId.toString()),
                 null
             )
-            Log.d(TAG, "Cursor found ${_cursor?.count} rows")
-            while (_cursor?.moveToNext() == true) {
-                val cursor = _cursor!!
-                // This data set has changed.
-                val widgetId = cursor.getInt(cursor.getColumnIndex(Timetable.WIDGET_ID))
-                AppWidgetManager.getInstance(_context)
-                    .updateAppWidget(
-                        widgetId,
-                        RemoteViews(_context.packageName, R.layout.widget).apply {
-                            // Do manual updating here, the adapter will handle the list creation.
-                            // Set the widget title
-                            val stopName =
-                                cursor.getString(cursor.getColumnIndex(Timetable.COLUMN_STOPNAME))
-                            setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
-                        })
-            }
+//            Log.d(TAG, "Cursor found ${_cursor?.count} rows")
+//            while (_cursor?.moveToNext() == true) {
+//                val cursor = _cursor!!
+//                // This data set has changed.
+//                val widgetId = cursor.getInt(cursor.getColumnIndex(Timetable.WIDGET_ID))
+//                AppWidgetManager.getInstance(_context)
+//                    .updateAppWidget(
+//                        widgetId,
+//                        RemoteViews(_context.packageName, R.layout.widget).apply {
+//                            // Do manual updating here, the adapter will handle the list creation.
+//                            // Set the widget title
+//                        })
+//            }
         }
 
         override fun hasStableIds(): Boolean {

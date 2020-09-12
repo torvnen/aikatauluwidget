@@ -3,6 +3,7 @@ package com.example.aikataulu.models
 import android.database.MatrixCursor
 
 class Timetable(val widgetId: Int, val stop: Stop, val departures: List<Departure>) {
+    @Deprecated("Use framework methods instead")
     var isViewUpdated: Boolean = false
     companion object {
         const val COLUMN_STOPNAME = "STOPNAME"

@@ -10,6 +10,7 @@ import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
 import com.example.aikataulu.database.contracts.ConfigurationContract
+import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.ui.ConfigurationActivity
 
@@ -54,12 +55,19 @@ class TimetableWidgetProvider : AppWidgetProvider() {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
             if (widgetId != -1) {
                 Log.i(TAG, "[WidgetId=$widgetId]: Notifying data as changed.")
+                val widgetConfig =
+                    ConfigurationProvider.getExistingConfigurationOrNull(widgetId, context!!)
+                val stopName = if (widgetConfig == null) "" else StopProvider.getStopByIdOrNull(
+                    widgetConfig.stopId!!,
+                    context
+                )!!.name
                 AppWidgetManager.getInstance(context).apply {
                     // Set the RemoteViews for Widgets to have a view adapter
                     // Remember to also call updateAppWidget, the RemoteViews will not apply itself.
                     updateAppWidget(
                         widgetId,
                         RemoteViews(context!!.packageName, R.layout.widget).apply {
+                            setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
                             setRemoteAdapter(
                                 R.id.widget_content_target,
                                 Intent(context!!, TimetableRemoteViewsService::class.java).apply {
