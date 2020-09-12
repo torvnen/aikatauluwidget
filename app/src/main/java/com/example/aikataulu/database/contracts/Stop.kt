@@ -2,7 +2,6 @@ package com.example.aikataulu.database.contracts
 
 import android.database.Cursor
 import android.provider.BaseColumns
-import com.example.aikataulu.TimetableConfiguration
 import com.example.aikataulu.models.Stop
 
 object StopContract {

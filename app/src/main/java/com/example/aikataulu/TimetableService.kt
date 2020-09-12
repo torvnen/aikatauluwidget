@@ -109,10 +109,9 @@ class TimetableTaskRunner(
             null
         )
 
-        // Clear and remove all tasks
+        // Cancel and clear all tasks and their timers
         cancelAllTasks()
-        val keys = _tasks.keys
-        keys.forEach { _tasks.remove(it) }
+        _tasks.clear()
 
         while (cursor?.moveToNext() == true) {
             val config = ConfigurationContract.ConfigurationEntry.cursorToPoco(cursor)
