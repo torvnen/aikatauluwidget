@@ -13,9 +13,9 @@ import com.example.aikataulu.database.contracts.StopContract
 import com.example.aikataulu.models.Timetable
 import com.google.gson.Gson
 
-// https://developer.android.com/guide/topics/providers/content-provider-basics
+
 class TimetableDataProvider : ContentProvider() {
-    private val _data = ArrayList<Timetable>()
+    private val _data = HashMap<Int, Timetable>()
     private lateinit var dbHelper: TimetableDbHelper
 
     companion object {
@@ -43,12 +43,11 @@ class TimetableDataProvider : ContentProvider() {
     ): Cursor? {
         Log.d(TAG, "Received query with selection $selection")
         // Return out-of-date data sets
-        val data = _data.filter { it.widgetId.toString() == selectionArgs!!.first() }
+        val widgetId = selectionArgs!!.first().toInt()
+        val data = if (_data.containsKey(widgetId)) _data[widgetId] else null
         return MatrixCursor(Timetable.allColumns).apply {
-            data.forEach {
-                it.toMatrixRows().forEach { row ->
-                    addRow(row)
-                }
+            data?.toMatrixRows()?.forEach { row ->
+                addRow(row)
             }
         }
         return null
@@ -63,13 +62,11 @@ class TimetableDataProvider : ContentProvider() {
         val stopId = selection!!
         val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
         val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
+
         timetable.isViewUpdated = false
         Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
+        _data[timetable.widgetId] = timetable
 
-        _data.removeIf {
-            it.stop.hrtId == stopId
-        }
-        _data.add(timetable)
         return 1
     }
 

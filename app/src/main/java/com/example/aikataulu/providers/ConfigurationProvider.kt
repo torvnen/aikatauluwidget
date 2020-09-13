@@ -2,6 +2,7 @@ package com.example.aikataulu
 
 import android.content.ContentProvider
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import android.net.Uri
@@ -18,6 +19,20 @@ class ConfigurationProvider : ContentProvider() {
 
         val CONFIGURATION_URI: Uri =
             Uri.parse("content://com.example.android.aikataulu.configuration_provider")
+
+
+        fun getExistingConfigurationOrNull(widgetId: Int, context: Context): TimetableConfiguration? {
+            val cursor = context.contentResolver.query(
+                ConfigurationProvider.CONFIGURATION_URI, null,
+                "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
+                arrayOf(widgetId.toString()),
+                null,
+                null
+            )
+            return if (cursor?.moveToFirst() == true) ConfigurationContract.ConfigurationEntry.cursorToPoco(
+                cursor
+            ) else null
+        }
     }
 
     override fun onCreate(): Boolean {
