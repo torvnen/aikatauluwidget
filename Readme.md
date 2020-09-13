@@ -2,7 +2,7 @@
 
 Save time in your commuting routine by instantly checking your favorite stops' next departures!
 
-![Widget preview](https://user-images.githubusercontent.com/16963315/92961080-573b2180-f477-11ea-8d5c-a9e59ac2f8df.png)
+![Widget preview](https://user-images.githubusercontent.com/16963315/93012734-4be91280-f5ab-11ea-8df1-0bce28e18363.PNG)
 
 ## Installation
 
