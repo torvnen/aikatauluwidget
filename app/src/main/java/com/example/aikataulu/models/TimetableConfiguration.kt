@@ -1,4 +1,4 @@
-package com.example.aikataulu
+package com.example.aikataulu.models
 
 data class TimetableConfiguration(
     var updateIntervalS: Int = 10,

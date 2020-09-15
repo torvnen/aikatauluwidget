@@ -9,22 +9,26 @@ import android.net.Uri
 import android.util.Log
 import com.example.aikataulu.database.TimetableDbHelper
 import com.example.aikataulu.database.contracts.ConfigurationContract
+import com.example.aikataulu.models.TimetableConfiguration
 
 class ConfigurationProvider : ContentProvider() {
     private lateinit var dbHelper: TimetableDbHelper
-    private val entry = ConfigurationContract.ConfigurationEntry
 
     companion object {
         const val TAG = "TIMETABLE.ConfigurationProvider"
+        private val entry = ConfigurationContract.ConfigurationEntry
 
         val CONFIGURATION_URI: Uri =
             Uri.parse("content://com.example.android.aikataulu.configuration_provider")
 
 
-        fun getExistingConfigurationOrNull(widgetId: Int, context: Context): TimetableConfiguration? {
+        fun getExistingConfigurationOrNull(
+            widgetId: Int,
+            context: Context
+        ): TimetableConfiguration? {
             val cursor = context.contentResolver.query(
-                ConfigurationProvider.CONFIGURATION_URI, null,
-                "${ConfigurationContract.ConfigurationEntry.COLUMN_NAME_WIDGET_ID} = ?",
+                CONFIGURATION_URI, null,
+                "${entry.COLUMN_NAME_WIDGET_ID} = ?",
                 arrayOf(widgetId.toString()),
                 null,
                 null
@@ -32,6 +36,12 @@ class ConfigurationProvider : ContentProvider() {
             return if (cursor?.moveToFirst() == true) ConfigurationContract.ConfigurationEntry.cursorToPoco(
                 cursor
             ) else null
+        }
+
+        fun enableWidget(widgetId: Int, context: Context) {
+            context.contentResolver.update(CONFIGURATION_URI, ContentValues().apply {
+                put(entry.COLUMN_NAME_WIDGET_ENABLED, true)
+            }, "${entry.COLUMN_NAME_WIDGET_ID} = ?", arrayOf(widgetId.toString()))
         }
     }
 
@@ -47,7 +57,7 @@ class ConfigurationProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
-        Log.d(TAG, "Received query with selection $selection")
+        Log.d(TAG, "Received query with selection $selection ${selectionArgs?.joinToString()}}")
         return dbHelper.readableDatabase.query(
             entry.TABLE_NAME,
             entry.allColumns(),
@@ -84,13 +94,13 @@ class ConfigurationProvider : ContentProvider() {
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
-            val id = dbHelper.writableDatabase.insertWithOnConflict(
-                entry.TABLE_NAME,
-                null,
-                values,
-                CONFLICT_REPLACE
-            )
-            Log.d(TAG, "Inserted or updated a row with id=$id")
+        val id = dbHelper.writableDatabase.insertWithOnConflict(
+            entry.TABLE_NAME,
+            null,
+            values,
+            CONFLICT_REPLACE
+        )
+        Log.d(TAG, "Inserted or updated a row with id=$id")
         return uri
     }
 

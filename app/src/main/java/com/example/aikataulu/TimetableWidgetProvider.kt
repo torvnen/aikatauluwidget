@@ -50,6 +50,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
     }
 
     // Update widget based on new data
+    // TODO Remove this method. This should be done elsewhere.
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)

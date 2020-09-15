@@ -12,7 +12,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.example.aikataulu.R
-import com.example.aikataulu.TimetableConfiguration
+import com.example.aikataulu.models.TimetableConfiguration
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.api.Api
 import com.example.aikataulu.database.contracts.StopContract
