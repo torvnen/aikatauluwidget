@@ -20,4 +20,10 @@ Tap the items to configure your desired stop and other settings.
 
 After saving the configuration, the widget will be created. You can change your configuration by tapping on the widget.
 
+## About source code
+
+The main source code can be found under [app/src/main/java/com/example/aikataulu].
+
+GraphQL schema and queries are [here](src/main/graphql/com/example/aikataulu) and the code generating script is [here](app/generate-graphql-schema.bat)
+
 ### Feedback is welcome on Github!
