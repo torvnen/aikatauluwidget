@@ -11,7 +11,7 @@ class TimetableDbHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         // If you change the database schema, you must increment the database version.
-        const val DATABASE_VERSION = 6
+        const val DATABASE_VERSION = 9
         const val DATABASE_NAME = "aikataulu.db"
     }
 

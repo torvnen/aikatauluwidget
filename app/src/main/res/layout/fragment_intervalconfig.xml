@@ -20,7 +20,6 @@
             android:id="@+id/interval_10s"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="10 seconds"
             android:textSize="18sp" />
 
@@ -28,7 +27,6 @@
             android:id="@+id/interval_30s"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="30 seconds"
             android:textSize="18sp" />
 
@@ -36,7 +34,6 @@
             android:id="@+id/interval_1m"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="1 minute"
             android:textSize="18sp" />
 
@@ -44,7 +41,6 @@
             android:id="@+id/interval_5m"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="5 minutes"
             android:textSize="18sp" />
 
@@ -52,7 +48,6 @@
             android:id="@+id/interval_15m"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="15 minutes"
             android:textSize="18sp" />
 
@@ -60,7 +55,6 @@
             android:id="@+id/interval_30m"
             android:layout_width="match_parent"
             android:layout_height="45dp"
-            android:onClick="onIntervalRadioButtonClicked"
             android:text="30 minutes"
             android:textSize="18sp" />
     </RadioGroup>
