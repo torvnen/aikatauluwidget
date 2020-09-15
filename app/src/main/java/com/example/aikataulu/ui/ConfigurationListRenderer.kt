@@ -15,6 +15,7 @@ import com.example.aikataulu.models.TimetableConfiguration
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.google.gson.Gson
 
+/** Creates a list of configuration items and re-renders on config change. */
 class ConfigurationListRenderer(
     private val activity: ConfigurationActivity,
     val widgetId: Int

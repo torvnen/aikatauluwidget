@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.aikataulu.*
 import com.example.aikataulu.database.contracts.ConfigurationContract
 import com.example.aikataulu.models.TimetableConfiguration
-import com.example.aikataulu.providers.TimetableDataProvider
 
 class ConfigurationActivity : AppCompatActivity() {
     private lateinit var listRenderer: ConfigurationListRenderer
@@ -75,7 +74,7 @@ class ConfigurationActivity : AppCompatActivity() {
                 startActivity(Intent(this, MainActivity::class.java)
                     .apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        putExtra("Exit", true)
+                        putExtra(MainActivity.MAIN_ACTIVITY_EXTRA_EXIT, true)
                     })
 
                 // Set result of this activity and finish

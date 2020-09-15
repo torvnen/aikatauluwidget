@@ -10,7 +10,7 @@ import androidx.core.app.NotificationCompat
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.ui.MainActivity
 
-
+/** Handles the lifecycle of [TimetableTaskRunner] and it's tasks. */
 class TimetableService : Service() {
     private lateinit var _observer: TimetableTaskRunner
 
@@ -55,6 +55,7 @@ class TimetableService : Service() {
             _observer
         )
         // Notify of change so that the initial tasks are started
+        // TODO Is this necessary? Maybe after a device restart?
         applicationContext.contentResolver.notifyChange(
             TimetableDataProvider.CONFIGURATION_URI,
             null

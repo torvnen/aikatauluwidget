@@ -19,24 +19,29 @@ import com.example.aikataulu.database.contracts.StopContract
 import com.example.aikataulu.models.Stop
 import com.jakewharton.rxbinding4.widget.textChanges
 
+/**
+ * This is where the user can select the Stop for their widget configuration.
+ * It features a [android.widget.MultiAutoCompleteTextView] which gets the suggestions
+ * from an API call.
+ */
 class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfiguration) -> Unit) :
     DialogFragment() {
     private val searches = HashMap<String, ArrayList<Stop>>()
-    private var suggestions: List<String> = ArrayList<String>()
+    private var suggestions: List<String> = ArrayList()
     private var searchTerm: String = ""
     private var selectedStopId: String? = null
     private lateinit var autoCompleteAdapter: ArrayAdapter<String>
     private lateinit var autoComplete: AutoCompleteTextView
-
-    companion object {
-        const val TAG = "TIMETABLE.StopDialog"
-    }
 
     init {
         // Empty search always gives empty results
         searches[""] = arrayListOf()
     }
 
+    /**
+     * Creates the view from [R.layout.fragment_intervalconfig] and attaches event handlers
+     * for the [AutoCompleteTextView].
+     */
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val activity = activity!!
         // Create adapter before subscribing to any events
@@ -50,6 +55,7 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
         autoComplete = view.findViewById<AutoCompleteTextView>(R.id.stopAutoComplete).apply {
             threshold = 0
             // Execute an API call to fill the suggestions
+            // This could also be a debounced effect or something, if the API calls were too heavy.
             textChanges().subscribe { text ->
                 val textStr = text.toString()
                 if (text.isNotEmpty() && !searches.containsKey(textStr)) {
@@ -73,6 +79,8 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
                     }
                 }
             }
+            // Item click event handler
+            // Note: there's an onItemSelectedListener, but that's not the one we need.
             onItemClickListener =
                 AdapterView.OnItemClickListener { parent, view, position, id ->
                     val text = (view as TextView).text
@@ -91,13 +99,14 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
                             put(entry.COLUMN_NAME_HRTID, hrtId)
                         })
                 }
+            // Finish the autoComplete by setting the adapter to it.
             setAdapter(autoCompleteAdapter)
         }
         val builder = AlertDialog.Builder(activity)
         builder.setTitle("Select stop")
         builder.setView(view)
         builder.setPositiveButton("OK") { d: DialogInterface, _ ->
-            // TODO validate
+            // TODO validate?
             if (selectedStopId != null) {
                 config.stopId = selectedStopId
                 saveFn(config)
@@ -124,5 +133,9 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
         val textSelection = Pair(autoComplete.selectionStart, autoComplete.selectionEnd)
         autoComplete.text = autoComplete.text
         autoComplete.setSelection(textSelection.first, textSelection.second)
+    }
+
+    companion object {
+        const val TAG = "TIMETABLE.StopDialog"
     }
 }

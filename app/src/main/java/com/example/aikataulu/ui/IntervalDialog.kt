@@ -23,6 +23,10 @@ class IntervalDialog(
     private val activity: ConfigurationActivity
 ) : DialogFragment() {
     private val entry = ConfigurationContract.ConfigurationEntry
+
+    /**
+     * Updates the new interval value to database and notifies observers.
+     */
     private val onIntervalRadioButtonClicked = View.OnClickListener {
         var updateIntervalS: Int = currentIntervalS
         when (it.id) {

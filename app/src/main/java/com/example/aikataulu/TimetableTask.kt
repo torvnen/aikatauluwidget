@@ -13,6 +13,10 @@ import com.example.aikataulu.providers.TimetableDataProvider
 import com.google.gson.Gson
 import java.util.*
 
+/**
+ * Runnable task. Fetches data from API, updates it to [TimetableDataProvider] and
+ * notifies observers of the change.
+ */
 class TimetableTask(private val context: Context, private val config: TimetableConfiguration) :
     TimerTask() {
     private var stop: Stop
@@ -67,6 +71,8 @@ class TimetableTask(private val context: Context, private val config: TimetableC
             stop.hrtId,
             null
         )
+
+        // Notify of the update
         context.contentResolver.notifyChange(TimetableDataProvider.TIMETABLE_DATA_URI, null)
     }
 

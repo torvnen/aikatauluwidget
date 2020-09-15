@@ -58,6 +58,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                         R.id.widget_content_target,
                         Intent(context!!, TimetableRemoteViewsService::class.java).apply {
                             type = "set-remote-adapter-$appWidgetId"
+                            // Put the WidgetId as extra for the remote adapter
                             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                         }
                     )
@@ -66,6 +67,7 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                     setOnClickPendingIntent(R.id.widgetContainer,
                         Intent(context, ConfigurationActivity::class.java)
                             .let { intent ->
+                                // WidgetId is needed in ConfigurationActivity
                                 intent.putExtra(
                                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                                     appWidgetId
