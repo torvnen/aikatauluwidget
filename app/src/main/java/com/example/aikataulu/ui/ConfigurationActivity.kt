@@ -17,20 +17,6 @@ class ConfigurationActivity : AppCompatActivity() {
     private lateinit var listRenderer: ConfigurationListRenderer
     private var widgetId: Int? = null
 
-    /** Update or insert the current selected values into DB. */
-    private fun save(vm: TimetableConfiguration) {
-        val values = configToContentValues(vm)
-        applicationContext.contentResolver.insert(
-            TimetableDataProvider.CONFIGURATION_URI,
-            values
-        )
-        // Always notify observers
-        applicationContext.contentResolver.notifyChange(
-            TimetableDataProvider.CONFIGURATION_URI,
-            listRenderer // The ListRenderer observer should know not to render at this point.
-        )
-    }
-
     /**
      * [Invoked by framework]
      * Get required data, set observer, render initial view and attach Save Button event handler.
@@ -72,7 +58,10 @@ class ConfigurationActivity : AppCompatActivity() {
                 val widgetId =
                     widgetId!! // Make it throw right away if null/unset. Should never occur.
 
-                // Set this widget as enabled
+                /**
+                 * IMPORTANT!
+                 * Set this widget as enabled.
+                 */
                 ConfigurationProvider.enableWidget(widgetId, applicationContext)
 
                 // Notify Widget Provider of config changes
@@ -81,11 +70,13 @@ class ConfigurationActivity : AppCompatActivity() {
                     .updateAppWidgetOptions(widgetId, Bundle())
 
                 // Close main activity
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                intent.putExtra("Exit", true)
-                startActivity(intent)
-                // Set result of activity and finish
+                startActivity(Intent(this, MainActivity::class.java)
+                    .apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra("Exit", true)
+                    })
+
+                // Set result of this activity and finish
                 setResult(
                     Activity.RESULT_OK,
                     Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
@@ -111,6 +102,7 @@ class ConfigurationActivity : AppCompatActivity() {
                 put(e.COLUMN_NAME_UPDATE_INTERVAL_SECONDS, c.updateIntervalS)
                 put(e.COLUMN_NAME_AUTO_UPDATE_ENABLED, c.autoUpdate)
                 put(e.COLUMN_NAME_SELECTED_STOP_ID, c.stopId)
+                put(e.COLUMN_NAME_WIDGET_ENABLED, c.isWidgetEnabled)
             }
         }
     }

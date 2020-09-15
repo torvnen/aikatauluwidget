@@ -62,7 +62,7 @@ class TimetableTaskRunner(
                 )
             if (config != null) {
                 val widgetId = config.widgetId
-                if (config.autoUpdate && widgetId != null && widgetId > 0) {
+                if (config.isWidgetEnabled && config.autoUpdate && widgetId != null && widgetId > 0) {
                     Log.d(
                         TAG,
                         "[WidgetId=$widgetId] Starting task with interval [${config.updateIntervalS} seconds]"

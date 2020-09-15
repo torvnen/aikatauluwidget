@@ -7,10 +7,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.widget.RemoteViews
 import com.example.aikataulu.database.contracts.ConfigurationContract
-import com.example.aikataulu.models.Timetable
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.ui.ConfigurationActivity
 
@@ -49,59 +49,53 @@ class TimetableWidgetProvider : AppWidgetProvider() {
         super.onEnabled(context)
     }
 
-    // Update widget based on new data
-    // TODO Remove this method. This should be done elsewhere.
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
-            val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
-            if (widgetId != -1) {
-                Log.i(TAG, "[WidgetId=$widgetId]: Notifying data as changed.")
-                val widgetConfig =
-                    ConfigurationProvider.getExistingConfigurationOrNull(widgetId, context!!)
-                val stopName = if (widgetConfig == null) "" else StopProvider.getStopByIdOrNull(
-                    widgetConfig.stopId!!,
-                    context
-                )!!.name
-                AppWidgetManager.getInstance(context).apply {
-                    // Set the RemoteViews for Widgets to have a view adapter
-                    // Remember to also call updateAppWidget, the RemoteViews will not apply itself.
-                    updateAppWidget(
-                        widgetId,
-                        RemoteViews(context!!.packageName, R.layout.widget).apply {
-                            setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
-                            setRemoteAdapter(
-                                R.id.widget_content_target,
-                                Intent(context!!, TimetableRemoteViewsService::class.java).apply {
-                                    type = "set-remote-adapter-$widgetId"
-                                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-                                }
-                            )
-                            setOnClickPendingIntent(R.id.widgetContainer,
-                                Intent(context, ConfigurationActivity::class.java)
-                                    .let { intent ->
-                                        intent.putExtra(
-                                            AppWidgetManager.EXTRA_APPWIDGET_ID,
-                                            widgetId
-                                        )
-                                        intent.action = "configure_widget-$widgetId"
-                                        intent.type = "configure_widget-$widgetId"
-                                        PendingIntent.getActivity(
-                                            context,
-                                            widgetId,
-                                            intent,
-                                            PendingIntent.FLAG_UPDATE_CURRENT
-                                        )
-                                    })
-                        })
+    override fun onAppWidgetOptionsChanged(
+        context: Context?,
+        appWidgetManager: AppWidgetManager?,
+        appWidgetId: Int,
+        newOptions: Bundle?
+    ) {
+        Log.i(TAG, "[WidgetId=$appWidgetId]: Notifying data as changed.")
+        val widgetConfig =
+            ConfigurationProvider.getExistingConfigurationOrNull(appWidgetId, context!!)
+        val stopName = if (widgetConfig == null) "" else StopProvider.getStopByIdOrNull(
+            widgetConfig.stopId!!,
+            context
+        )!!.name
+        AppWidgetManager.getInstance(context).apply {
+            // Set the RemoteViews for Widgets to have a view adapter
+            // Remember to also call updateAppWidget, the RemoteViews will not apply itself.
+            updateAppWidget(
+                appWidgetId,
+                RemoteViews(context!!.packageName, R.layout.widget).apply {
+                    setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
+                    setRemoteAdapter(
+                        R.id.widget_content_target,
+                        Intent(context!!, TimetableRemoteViewsService::class.java).apply {
+                            type = "set-remote-adapter-$appWidgetId"
+                            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                        }
+                    )
+                    setOnClickPendingIntent(R.id.widgetContainer,
+                        Intent(context, ConfigurationActivity::class.java)
+                            .let { intent ->
+                                intent.putExtra(
+                                    AppWidgetManager.EXTRA_APPWIDGET_ID,
+                                    appWidgetId
+                                )
+                                intent.action = "configure_widget-$appWidgetId"
+                                intent.type = "configure_widget-$appWidgetId"
+                                PendingIntent.getActivity(
+                                    context,
+                                    appWidgetId,
+                                    intent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT
+                                )
+                            })
+                })
 
-                    notifyAppWidgetViewDataChanged(widgetId, R.id.widget_content_target)
-                }
-            } else Log.w(
-                TAG,
-                "Widget ID not defined when ACTION_APPWIDGET_UPDATE was invoked. ComponentName: ${intent.component?.className}"
-            )
+            notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_content_target)
         }
-        super.onReceive(context, intent)
     }
 
     override fun onUpdate(

@@ -42,11 +42,15 @@ object ConfigurationContract {
                     cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_AUTO_UPDATE_ENABLED)) == 1
                 val widgetId =
                     cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_WIDGET_ID))
+                val isWidgetEnabled =
+                    cursor.getInt(cursor.getColumnIndex(entry.COLUMN_NAME_WIDGET_ENABLED)) == 1
                 TimetableConfiguration(
                     updateIntervalS,
                     stopId,
                     isAutoUpdateEnabled,
-                    widgetId
+                    widgetId,
+                    null,
+                    isWidgetEnabled
                 )
             } else null
         }

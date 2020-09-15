@@ -5,8 +5,10 @@ data class TimetableConfiguration(
     var stopId: String? = null,
     var autoUpdate: Boolean = false,
     var widgetId: Int? = null,
-    var stopName: String? = null
+    var stopName: String? = null,
+    var isWidgetEnabled: Boolean = false
 ) {
+
     fun getUpdateIntervalText(): String {
         val m = updateIntervalS / 60
         val s = updateIntervalS % 60
