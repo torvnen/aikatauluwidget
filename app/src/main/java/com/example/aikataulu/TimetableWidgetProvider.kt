@@ -14,41 +14,25 @@ import com.example.aikataulu.database.contracts.ConfigurationContract
 import com.example.aikataulu.providers.TimetableDataProvider
 import com.example.aikataulu.ui.ConfigurationActivity
 
+/**
+ * Handles widget-related events.
+ * The single instance of this class is shared by all widgets.
+ * Defined in [R.xml.app_widget_provider].
+ */
 class TimetableWidgetProvider : AppWidgetProvider() {
-    companion object {
-        private const val TAG = "TIMETABLE.WidgetProvider"
-
-        // Send data to be handled by ViewFactory
-        fun sendUpdateWidgetBroadcast(context: Context, widgetId: Int) {
-            Log.d(TAG, "[WidgetId=$widgetId]: Broadcasting ACTION_APPWIDGET_UPDATE.")
-            context.sendBroadcast(
-                Intent(context, TimetableWidgetProvider::class.java)
-                    .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-            )
-        }
-
-        fun getExistingWidgetIds(context: Context): IntArray {
-            return AppWidgetManager
-                .getInstance(context)
-                .getAppWidgetIds(
-                    ComponentName(
-                        context.packageName,
-                        TimetableWidgetProvider::class.qualifiedName!!
-                    )
-                )
-        }
-    }
-
+    /** Start the service when any widget is enabled (added to home screen) */
     override fun onEnabled(context: Context?) {
         Log.d(TAG, "onEnabled()")
-        // Start service when a widget has been added
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context!!.startForegroundService(Intent(context, TimetableService::class.java))
         } else throw Exception("TIMETABLE: SDK Level too low. Cannot start foreground service.")
-        super.onEnabled(context)
     }
 
+    /**
+     * Set the widget content to match the updated configuration.
+     * This includes the click handler that will reopen the [ConfigurationActivity].
+     */
     override fun onAppWidgetOptionsChanged(
         context: Context?,
         appWidgetManager: AppWidgetManager?,
@@ -63,12 +47,13 @@ class TimetableWidgetProvider : AppWidgetProvider() {
             context
         )!!.name
         AppWidgetManager.getInstance(context).apply {
-            // Set the RemoteViews for Widgets to have a view adapter
-            // Remember to also call updateAppWidget, the RemoteViews will not apply itself.
             updateAppWidget(
                 appWidgetId,
                 RemoteViews(context!!.packageName, R.layout.widget).apply {
+                    /** Set the [android.widget.TextView] title text */
                     setTextViewText(R.id.widgetTitle, "Departures for stop $stopName")
+
+                    /** Set [TimetableRemoteViewsService] as the Remote Adapter for this widget */
                     setRemoteAdapter(
                         R.id.widget_content_target,
                         Intent(context!!, TimetableRemoteViewsService::class.java).apply {
@@ -76,6 +61,8 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                         }
                     )
+
+                    /** Open [ConfigurationActivity] when the widget is clicked */
                     setOnClickPendingIntent(R.id.widgetContainer,
                         Intent(context, ConfigurationActivity::class.java)
                             .let { intent ->
@@ -93,20 +80,14 @@ class TimetableWidgetProvider : AppWidgetProvider() {
                                 )
                             })
                 })
-
-            notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_content_target)
         }
     }
 
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        Log.i(TAG, "onUpdate()")
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-    }
-
+    /**
+     * Perform cleanup.
+     * - Remove configuration object from the database
+     * - If no more widgets are active after removing this, stop the service.
+     */
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
         // Remove this config from DB
         appWidgetIds?.forEach {
@@ -121,5 +102,21 @@ class TimetableWidgetProvider : AppWidgetProvider() {
             Log.i(TAG, "Stopping service...")
             context.stopService(Intent(context, TimetableService::class.java))
         } else Log.w(TAG, "Context is null when widget provider is deleted. Cannot stop service.")
+    }
+
+    companion object {
+        private const val TAG = "TIMETABLE.WidgetProvider"
+
+        /** Finds the WidgetIds of all enabled widgets */
+        fun getExistingWidgetIds(context: Context): IntArray {
+            return AppWidgetManager
+                .getInstance(context)
+                .getAppWidgetIds(
+                    ComponentName(
+                        context.packageName,
+                        TimetableWidgetProvider::class.qualifiedName!!
+                    )
+                )
+        }
     }
 }

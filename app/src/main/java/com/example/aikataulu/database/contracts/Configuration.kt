@@ -27,7 +27,8 @@ object ConfigurationContract {
                 COLUMN_NAME_WIDGET_ID,
                 COLUMN_NAME_UPDATE_INTERVAL_SECONDS,
                 COLUMN_NAME_SELECTED_STOP_ID,
-                COLUMN_NAME_AUTO_UPDATE_ENABLED
+                COLUMN_NAME_AUTO_UPDATE_ENABLED,
+                COLUMN_NAME_WIDGET_ENABLED
             )
         }
 

@@ -43,12 +43,14 @@ class ConfigurationListRenderer(
      */
     override fun onChange(selfChange: Boolean, uri: Uri?) {
         Log.d(TAG, "[selfChange=$selfChange, WidgetId=$widgetId] Observer triggered")
-        val existingConfig =
-            ConfigurationProvider.getExistingConfigurationOrNull(
-                widgetId,
-                activity.applicationContext
-            )!!
-        render(existingConfig)
+        if (!selfChange) {
+            val existingConfig =
+                ConfigurationProvider.getExistingConfigurationOrNull(
+                    widgetId,
+                    activity.applicationContext
+                )!!
+            render(existingConfig)
+        }
     }
 
     /** Update this configuration's values to database. */
@@ -133,7 +135,8 @@ class ConfigurationListRenderer(
                 config.getUpdateIntervalText(),
                 {
                     val transaction = activity.supportFragmentManager.beginTransaction()
-                    intervalDialog = IntervalDialog(config.widgetId!!, config.updateIntervalS, activity)
+                    intervalDialog =
+                        IntervalDialog(config.widgetId!!, config.updateIntervalS, activity)
                     transaction.add(intervalDialog, IntervalDialog.TAG)
                     transaction.commit()
                 },

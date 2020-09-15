@@ -20,7 +20,6 @@ class TimetableTaskRunner(
 ) : ContentObserver(Handler()) {
     private val _tasks =
         HashMap<Int, Pair<Timer, TimetableTask>>()
-    private var cursor: Cursor? = null
 
     /**
      * [Invoked by application]
@@ -42,11 +41,11 @@ class TimetableTaskRunner(
             ConfigurationContract.ConfigurationEntry
 
         // Find and return configuration for all widgets
-        cursor = context.contentResolver.query(
+        val cursor = context.contentResolver.query(
             TimetableDataProvider.CONFIGURATION_URI,
             null,
-            null,
-            null,
+            "${entry.COLUMN_NAME_WIDGET_ENABLED} = ?",
+            arrayOf(1.toString()),
             null
         )
 
@@ -62,7 +61,7 @@ class TimetableTaskRunner(
                 )
             if (config != null) {
                 val widgetId = config.widgetId
-                if (config.isWidgetEnabled && config.autoUpdate && widgetId != null && widgetId > 0) {
+                if (config.autoUpdate && widgetId != null && widgetId > 0) {
                     Log.d(
                         TAG,
                         "[WidgetId=$widgetId] Starting task with interval [${config.updateIntervalS} seconds]"

@@ -77,12 +77,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
             }
-            widgetIds.forEach {
-                TimetableWidgetProvider.sendUpdateWidgetBroadcast(
-                    applicationContext,
-                    it
-                )
-            }
         }
     }
 }

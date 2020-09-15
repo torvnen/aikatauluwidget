@@ -68,13 +68,6 @@ class TimetableTask(private val context: Context, private val config: TimetableC
             null
         )
         context.contentResolver.notifyChange(TimetableDataProvider.TIMETABLE_DATA_URI, null)
-
-        // Notify WidgetProvider of the changes
-        // TODO This should *not* be needed.
-        TimetableWidgetProvider.sendUpdateWidgetBroadcast(
-            context,
-            config.widgetId!!
-        )
     }
 
     companion object {

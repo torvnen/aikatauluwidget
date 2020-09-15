@@ -61,8 +61,10 @@ class ConfigurationActivity : AppCompatActivity() {
                 /**
                  * IMPORTANT!
                  * Set this widget as enabled.
+                 * Also notify of change.
                  */
                 ConfigurationProvider.enableWidget(widgetId, applicationContext)
+                contentResolver.notifyChange(ConfigurationProvider.CONFIGURATION_URI, listRenderer)
 
                 // Notify Widget Provider of config changes
                 // Send empty bundle , the config will be read via other methods
