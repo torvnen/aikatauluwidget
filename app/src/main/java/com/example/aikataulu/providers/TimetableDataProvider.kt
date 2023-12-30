@@ -50,7 +50,6 @@ class TimetableDataProvider : ContentProvider() {
                 addRow(row)
             }
         }
-        return null
     }
 
     override fun update(
@@ -63,7 +62,6 @@ class TimetableDataProvider : ContentProvider() {
         val timetableJson = values!!.getAsString(COLUMN_TIMETABLE)
         val timetable = Gson().fromJson(timetableJson, Timetable::class.javaObjectType)
 
-        timetable.isViewUpdated = false
         Log.i(TAG, "Stop $stopId has ${timetable.departures.size} departures")
         _data[timetable.widgetId] = timetable
 

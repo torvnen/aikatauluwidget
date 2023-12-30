@@ -32,6 +32,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
          * This triggers the in-framework view handling.
          */
         override fun onDataSetChanged() {
+            Log.v(TAG, "Data set changed")
             _cursor?.close()
             // Get all data for widgets that have out-of-date data
             _cursor = _context.contentResolver.query(
@@ -53,6 +54,7 @@ class TimetableRemoteViewsService : RemoteViewsService() {
                 Log.w(TAG, "Invalid position in getViewAt()")
                 return null
             }
+            Log.v(TAG, "View at $position")
 
             val cursor = _cursor!!
             return RemoteViews(_context.packageName, R.layout.single_departure).apply {

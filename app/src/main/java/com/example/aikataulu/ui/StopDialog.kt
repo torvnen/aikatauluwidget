@@ -1,5 +1,6 @@
 package com.example.aikataulu.ui
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.ContentValues
@@ -42,6 +43,7 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
      * Creates the view from [R.layout.fragment_intervalconfig] and attaches event handlers
      * for the [AutoCompleteTextView].
      */
+    @SuppressLint("CheckResult")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val activity = activity!!
         // Create adapter before subscribing to any events
@@ -58,12 +60,14 @@ class StopDialog(var config: TimetableConfiguration, val saveFn: (TimetableConfi
             // This could also be a debounced effect or something, if the API calls were too heavy.
             textChanges().subscribe { text ->
                 val textStr = text.toString()
+                Log.v(TAG, "Text changed to $textStr")
                 if (text.isNotEmpty() && !searches.containsKey(textStr)) {
+                    Log.d(TAG, "Searching stops with term $textStr")
                     Api.getStopsContainingText(textStr, {
                         searches[textStr] = it
                         Log.d(TAG, "Found ${it.size} stops for search term $textStr")
                         if (autoComplete.text.toString() == textStr) {
-                            activity!!.runOnUiThread { setSuggestions(it) }
+                            activity.runOnUiThread { setSuggestions(it) }
                         }
                     }, {})
                 }
